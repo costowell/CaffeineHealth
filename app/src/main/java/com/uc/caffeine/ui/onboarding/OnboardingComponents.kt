@@ -123,6 +123,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.uc.caffeine.R
 import com.uc.caffeine.data.UserSettings
+import com.uc.caffeine.ui.components.RollingNumberText
 import com.uc.caffeine.ui.components.rememberAppHaptics
 import com.uc.caffeine.ui.theme.MontserratFamily
 import com.uc.caffeine.util.formatTimeOfDay
@@ -1366,12 +1367,15 @@ internal fun WeightStepperCard(
                         shape = RoundedCornerShape(12.dp),
                         color = MaterialTheme.colorScheme.surfaceContainerHighest,
                     ) {
-                        Text(
+                        RollingNumberText(
                             text = weightValue.toString(),
-                            style = MaterialTheme.typography.headlineLarge,
-                            color = MaterialTheme.colorScheme.primary,
-                            maxLines = 1,
+                            style = MaterialTheme.typography.headlineLarge.copy(
+                                color = MaterialTheme.colorScheme.primary,
+                            ),
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
+                            labelPrefix = "weight_stepper",
                         )
                     }
                     Text(
@@ -1598,10 +1602,12 @@ internal fun ProfileMetricRow(
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Text(
+                RollingNumberText(
                     text = value,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        color = MaterialTheme.colorScheme.primary,
+                    ),
+                    labelPrefix = "profile_metric_$title",
                 )
             }
             IconButton(onClick = onInfoClick) {
