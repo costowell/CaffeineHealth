@@ -34,6 +34,7 @@ object SettingsKeys {
     val CYP1A2_GENOTYPE = stringPreferencesKey("cyp1a2_genotype")
     val AHR_GENOTYPE = stringPreferencesKey("ahr_genotype")
     val HORMONAL_STATUS = stringPreferencesKey("hormonal_status")
+    val HEALTH_CONNECT_ENABLED = booleanPreferencesKey("health_connect_enabled")
 
     // Raw onboarding profile factors
     val PROFILE_AGE_BUCKET = stringPreferencesKey("profile_age_bucket")
@@ -182,6 +183,12 @@ class SettingsRepository(private val context: Context) {
             prefs[SettingsKeys.ONBOARDING_COMPLETE] = true
         }
     }
+
+    suspend fun updateHealthConnectEnabled(enabled: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[SettingsKeys.HEALTH_CONNECT_ENABLED] = enabled
+        }
+    }
 }
 
 internal fun Preferences.toUserSettings(defaultSettings: UserSettings): UserSettings {
@@ -203,6 +210,7 @@ internal fun Preferences.toUserSettings(defaultSettings: UserSettings): UserSett
         cyp1a2Genotype = Cyp1a2Genotype.fromStorage(this[SettingsKeys.CYP1A2_GENOTYPE]),
         ahrGenotype = AhrGenotype.fromStorage(this[SettingsKeys.AHR_GENOTYPE]),
         hormonalStatus = HormonalStatus.fromStorage(this[SettingsKeys.HORMONAL_STATUS]),
+        healthConnectEnabled = this[SettingsKeys.HEALTH_CONNECT_ENABLED] ?: false,
     )
 }
 

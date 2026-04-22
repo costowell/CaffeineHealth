@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Schedule
@@ -39,6 +40,7 @@ internal fun SettingsListScreen(
     onAppearanceClick: () -> Unit,
     onLanguageClick: () -> Unit,
     onDateTimeClick: () -> Unit,
+    onHealthConnectClick: () -> Unit,
 ) {
     val haptics = rememberAppHaptics()
     val categories = listOf(
@@ -65,6 +67,12 @@ internal fun SettingsListScreen(
             summary = "Clock, date format, timezone",
             icon = Icons.Filled.Schedule,
             onClick = onDateTimeClick,
+        ),
+        SettingsCategoryItem(
+            title = "Health Connect",
+            summary = "Sync caffeine data to Health Connect",
+            icon = Icons.Filled.Favorite,
+            onClick = onHealthConnectClick,
         ),
     )
 

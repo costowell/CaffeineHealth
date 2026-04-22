@@ -1,11 +1,13 @@
 package com.uc.caffeine.ui.viewmodel
 
 import android.app.Application
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.datastore.preferences.core.MutablePreferences
 import com.uc.caffeine.data.AhrGenotype
 import com.uc.caffeine.data.AppDateFormat
+import com.uc.caffeine.data.HealthConnectManager
 import com.uc.caffeine.data.CaffeineDatabase
 import com.uc.caffeine.data.Cyp1a2Genotype
 import com.uc.caffeine.data.HormonalStatus
@@ -43,7 +45,6 @@ import com.uc.caffeine.util.resolvedZoneId
 import com.uc.caffeine.util.startOfDayMillis
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.compose.cartesian.data.columnSeries
-import com.patrykandpatrick.vico.compose.cartesian.data.lineSeries
 import com.patrykandpatrick.vico.compose.pie.data.PieChartModelProducer
 import com.patrykandpatrick.vico.compose.pie.data.pieSeries
 import java.time.LocalDate
@@ -53,6 +54,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
 sealed interface AddScreenUiEvent {
     data class DrinkLogged(val drinkName: String) : AddScreenUiEvent
 }
@@ -68,6 +71,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
     private val unitDao   = db.drinkUnitDao()
     private val logDao    = db.consumptionLogDao()
     private val settingsRepo = SettingsRepository(application)
+    val healthConnectManager = HealthConnectManager(application)
 
     // User settings flow
     val userSettings = settingsRepo.settingsFlow.stateIn(
@@ -96,6 +100,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = System.currentTimeMillis()
     )
+    val liveCurrentTimeMillis: StateFlow<Long> = liveTickerFlow
 
     // Slow ticker — 60-second interval for chart data & bedtime prediction.
     // Regenerating the full 24-hour curve every second was causing massive GC churn.
@@ -380,25 +385,9 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
     val analyticsTimeOfDayChartModelProducer = CartesianChartModelProducer()
 
     init {
-        viewModelScope.launch {
-            chartData.collect { data ->
-                if (data.dataPoints.isNotEmpty()) {
-                    val xValues = data.dataPoints.map { point ->
-                        ChartDataGenerator.timestampToDomainX(
-                            domainStartMillis = data.domainStartMillis,
-                            targetTimestampMillis = point.timestampMillis,
-                        )
-                    }
-                    val yValues = data.dataPoints.map { it.caffeineLevel }
-
-                    chartModelProducer.runTransaction {
-                        lineSeries {
-                            series(xValues, yValues)
-                        }
-                    }
-                }
-            }
-        }
+        // NOTE: chartModelProducer is updated inside CaffeineChart's
+        // LaunchedEffect, co-located with the axis/range setup, to avoid
+        // desync between model data and chart configuration.
 
         viewModelScope.launch {
             analyticsUiState.collect { state ->
@@ -427,15 +416,19 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             val defaultUnit = unitDao.getDefaultUnit(preset.id)
                 ?: fallbackUnitForPreset(preset)
-            logDao.logDrink(
-                buildConsumptionEntry(
-                    preset = preset,
-                    quantity = 1,
-                    unit = defaultUnit,
-                    startedAtMillis = System.currentTimeMillis(),
-                    durationMinutes = DEFAULT_CONSUMPTION_DURATION_MINUTES,
-                )
+            val entry = buildConsumptionEntry(
+                preset = preset,
+                quantity = 1,
+                unit = defaultUnit,
+                startedAtMillis = System.currentTimeMillis(),
+                durationMinutes = DEFAULT_CONSUMPTION_DURATION_MINUTES,
             )
+            logDao.logDrink(entry)
+            val settings = userSettings.value
+            if (settings.healthConnectEnabled) {
+                val zoneId = java.time.ZoneId.of(settings.timeZoneId)
+                runCatching { healthConnectManager.writeEntry(entry, zoneId) }
+            }
         }
     }
 
@@ -447,38 +440,46 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         durationMinutes: Int,
     ) {
         viewModelScope.launch {
-            logDao.logDrink(
-                buildConsumptionEntry(
-                    preset = preset,
-                    quantity = quantity,
-                    unit = unit,
-                    startedAtMillis = startedAtMillis,
-                    durationMinutes = durationMinutes,
-                )
+            val entry = buildConsumptionEntry(
+                preset = preset,
+                quantity = quantity,
+                unit = unit,
+                startedAtMillis = startedAtMillis,
+                durationMinutes = durationMinutes,
             )
+            logDao.logDrink(entry)
             addScreenEventsChannel.send(AddScreenUiEvent.DrinkLogged(preset.name))
+            val settings = userSettings.value
+            if (settings.healthConnectEnabled) {
+                val zoneId = java.time.ZoneId.of(settings.timeZoneId)
+                runCatching { healthConnectManager.writeEntry(entry, zoneId) }
+            }
         }
     }
 
     // Log from a RecentDrink (tapped from AddScreen quick add)
     fun logRecentDrink(recent: RecentDrink) {
         viewModelScope.launch {
-            logDao.logDrink(
-                ConsumptionEntry(
-                    drinkName  = recent.drinkName,
-                    caffeineMg = recent.caffeineMg,
-                    emoji      = recent.emoji,
-                    presetItemId = recent.presetItemId,
-                    quantity = recent.quantity,
-                    unitKey = recent.unitKey,
-                    unitCaffeineMg = recent.unitCaffeineMg,
-                    imageName  = recent.imageName,
-                    absorptionRate = recent.absorptionRate,
-                    startedAtMillis = System.currentTimeMillis(),
-                    durationMinutes = recent.durationMinutes,
-                )
+            val entry = ConsumptionEntry(
+                drinkName  = recent.drinkName,
+                caffeineMg = recent.caffeineMg,
+                emoji      = recent.emoji,
+                presetItemId = recent.presetItemId,
+                quantity = recent.quantity,
+                unitKey = recent.unitKey,
+                unitCaffeineMg = recent.unitCaffeineMg,
+                imageName  = recent.imageName,
+                absorptionRate = recent.absorptionRate,
+                startedAtMillis = System.currentTimeMillis(),
+                durationMinutes = recent.durationMinutes,
             )
+            logDao.logDrink(entry)
             addScreenEventsChannel.send(AddScreenUiEvent.DrinkLogged(recent.drinkName))
+            val settings = userSettings.value
+            if (settings.healthConnectEnabled) {
+                val zoneId = java.time.ZoneId.of(settings.timeZoneId)
+                runCatching { healthConnectManager.writeEntry(entry, zoneId) }
+            }
         }
     }
 
@@ -654,6 +655,18 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun updateHealthConnectEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepo.updateHealthConnectEnabled(enabled)
+            if (enabled) {
+                val settings = userSettings.value
+                val zoneId = java.time.ZoneId.of(settings.timeZoneId)
+                val entries = logDao.getAllEntriesOnce()
+                runCatching { healthConnectManager.syncAll(entries, zoneId) }
+            }
+        }
+    }
+
     // Profile factor update functions — each saves the raw value and recomputes the derived profile.
     fun updateProfileAgeBucket(ageBucket: AgeBucket?) {
         updateProfileFactorAndRecompute {
@@ -798,6 +811,56 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
     suspend fun getUnitsForPresetItemId(presetItemId: String): List<DrinkUnit> {
         if (presetItemId.isBlank()) return emptyList()
         return unitDao.getUnitsForPresetItemId(presetItemId)
+    }
+
+    suspend fun copyCustomDrinkImage(uri: Uri): String? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val dir = File(getApplication<Application>().filesDir, "custom_drinks")
+                dir.mkdirs()
+                val file = File(dir, "${System.currentTimeMillis()}.jpg")
+                getApplication<Application>().contentResolver.openInputStream(uri)?.use { input ->
+                    file.outputStream().use { output -> input.copyTo(output) }
+                }
+                file.absolutePath
+            } catch (e: Exception) {
+                null
+            }
+        }
+    }
+
+    fun saveCustomDrink(
+        name: String,
+        emoji: String,
+        imageUri: String,
+        category: String,
+        unitKey: String,
+        caffeineMg: Double,
+    ) {
+        viewModelScope.launch {
+            val preset = DrinkPreset(
+                itemId = "custom-${System.currentTimeMillis()}",
+                name = name,
+                emoji = emoji,
+                imageName = imageUri,
+                category = category,
+                defaultUnit = unitKey,
+                defaultCaffeineMg = caffeineMg.toInt(),
+                isCustom = true,
+                relevance = 10000,
+            )
+            val presetId = presetDao.insertAndGetId(preset).toInt()
+            unitDao.insert(
+                DrinkUnit(
+                    drinkId = presetId,
+                    unitKey = unitKey,
+                    caffeineMg = caffeineMg,
+                    milliliters = null,
+                    grams = null,
+                    isDefault = true,
+                )
+            )
+        }
     }
 
     private fun buildConsumptionEntry(

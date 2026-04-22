@@ -146,6 +146,7 @@ data class UserSettings(
      * Optional hormonal status (pregnancy or oral contraceptives).
      */
     val hormonalStatus: HormonalStatus = HormonalStatus.NONE,
+    val healthConnectEnabled: Boolean = false,
 ) {
     /**
      * Combined clearance factor from optional genetic and hormonal modifiers.

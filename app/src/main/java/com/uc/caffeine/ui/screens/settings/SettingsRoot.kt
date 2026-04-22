@@ -24,6 +24,7 @@ private enum class SettingsDestination : NavKey {
     Appearance,
     Language,
     DateTime,
+    HealthConnect,
 }
 
 @Composable
@@ -74,6 +75,9 @@ fun SettingsScreen(
                         onDateTimeClick = {
                             nestedBackStack.add(SettingsDestination.DateTime)
                         },
+                        onHealthConnectClick = {
+                            nestedBackStack.add(SettingsDestination.HealthConnect)
+                        },
                     )
 
                     SettingsDestination.CaffeineProfile -> CaffeineProfileSettingsScreen(
@@ -99,6 +103,13 @@ fun SettingsScreen(
                         onUse24HourClockChange = viewModel::updateUse24HourClock,
                         onDateFormatChange = viewModel::updateDateFormat,
                         onTimeZoneIdChange = viewModel::updateTimeZoneId,
+                        onBack = { nestedBackStack.removeLastOrNull() },
+                    )
+
+                    SettingsDestination.HealthConnect -> HealthConnectSettingsScreen(
+                        userSettings = userSettings,
+                        healthConnectManager = viewModel.healthConnectManager,
+                        onHealthConnectToggle = viewModel::updateHealthConnectEnabled,
                         onBack = { nestedBackStack.removeLastOrNull() },
                     )
                 }
