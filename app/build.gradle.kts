@@ -16,20 +16,19 @@ android {
         applicationId = "com.uc.caffeine"
         minSdk = 31
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
@@ -94,6 +93,9 @@ dependencies {
 
     // Health Connect
     implementation(libs.health.connect)
+
+    // Graphics Shapes — smooth shape morphing animations
+    implementation(libs.androidx.graphics.shapes)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
