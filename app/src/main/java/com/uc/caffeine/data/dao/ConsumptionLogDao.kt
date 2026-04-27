@@ -54,9 +54,16 @@ interface ConsumptionLogDao {
     @Query("SELECT * FROM consumption_log ORDER BY startedAtMillis DESC")
     fun getAllEntries(): Flow<List<ConsumptionEntry>>
 
+    // One-shot read of all entries — used for Health Connect bulk sync
+    @Query("SELECT * FROM consumption_log ORDER BY startedAtMillis DESC")
+    suspend fun getAllEntriesOnce(): List<ConsumptionEntry>
+
     // Delete all entries from today — the "Reset Today" button
     @Query("DELETE FROM consumption_log WHERE startedAtMillis >= :startOfDay")
     suspend fun clearToday(startOfDay: Long)
+
+    @Query("DELETE FROM consumption_log")
+    suspend fun deleteAll()
 
     // The 2 most recently logged DISTINCT serving combos — used for Add screen quick add
     // The subquery finds the max timestamp for each saved serving selection

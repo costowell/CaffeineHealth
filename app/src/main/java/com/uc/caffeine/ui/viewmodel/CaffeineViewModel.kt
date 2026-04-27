@@ -1,11 +1,13 @@
 package com.uc.caffeine.ui.viewmodel
 
 import android.app.Application
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.datastore.preferences.core.MutablePreferences
 import com.uc.caffeine.data.AhrGenotype
 import com.uc.caffeine.data.AppDateFormat
+import com.uc.caffeine.data.HealthConnectManager
 import com.uc.caffeine.data.CaffeineDatabase
 import com.uc.caffeine.data.Cyp1a2Genotype
 import com.uc.caffeine.data.HormonalStatus
@@ -43,7 +45,6 @@ import com.uc.caffeine.util.resolvedZoneId
 import com.uc.caffeine.util.startOfDayMillis
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.compose.cartesian.data.columnSeries
-import com.patrykandpatrick.vico.compose.cartesian.data.lineSeries
 import com.patrykandpatrick.vico.compose.pie.data.PieChartModelProducer
 import com.patrykandpatrick.vico.compose.pie.data.pieSeries
 import java.time.LocalDate
@@ -53,12 +54,21 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
 sealed interface AddScreenUiEvent {
     data class DrinkLogged(val drinkName: String) : AddScreenUiEvent
 }
 
 sealed interface HomeScreenUiEvent {
     data class LogActionCompleted(val message: String) : HomeScreenUiEvent
+}
+
+sealed interface MyDataUiState {
+    object Idle : MyDataUiState
+    object Working : MyDataUiState
+    data class Success(val message: String) : MyDataUiState
+    data class Error(val message: String) : MyDataUiState
 }
 
 class CaffeineViewModel(application: Application) : AndroidViewModel(application) {
@@ -68,6 +78,12 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
     private val unitDao   = db.drinkUnitDao()
     private val logDao    = db.consumptionLogDao()
     private val settingsRepo = SettingsRepository(application)
+    val healthConnectManager = HealthConnectManager(application)
+
+    private val backupManager = com.uc.caffeine.data.BackupManager(logDao, presetDao, unitDao, settingsRepo)
+
+    private val _myDataState = MutableStateFlow<MyDataUiState>(MyDataUiState.Idle)
+    val myDataState: StateFlow<MyDataUiState> = _myDataState.asStateFlow()
 
     // User settings flow
     val userSettings = settingsRepo.settingsFlow.stateIn(
@@ -96,6 +112,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = System.currentTimeMillis()
     )
+    val liveCurrentTimeMillis: StateFlow<Long> = liveTickerFlow
 
     // Slow ticker — 60-second interval for chart data & bedtime prediction.
     // Regenerating the full 24-hour curve every second was causing massive GC churn.
@@ -163,57 +180,6 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
             initialValue = emptyList()
         )
 
-    // Grouped drink catalog by category — used by the Add screen for categorized display
-    val groupedDrinkPresets: StateFlow<Map<String, List<DrinkPreset>>> = 
-        combine(
-            drinkPresets,
-            selectedCategoryFilter,
-            searchQuery  // Add search query
-        ) { drinks, filter, query ->
-            // First apply category filter
-            val categoryFiltered = if (filter != null) {
-                val lowercaseKey = CategoryUtils.getAllCategories()
-                    .entries.find { it.value == filter }?.key ?: filter.lowercase()
-                drinks.filter { it.category.lowercase() == lowercaseKey }
-            } else {
-                drinks
-            }
-            
-            // Then apply search filter
-            val searchFiltered = if (query.isNotBlank()) {
-                categoryFiltered.filter { drink ->
-                    drink.name.contains(query, ignoreCase = true) ||
-                    drink.brand.contains(query, ignoreCase = true) ||
-                    drink.description?.contains(query, ignoreCase = true) == true
-                }
-            } else {
-                categoryFiltered
-            }
-            
-            // Group and sort
-            searchFiltered
-                .groupBy { it.category.lowercase() }
-                .mapKeys { (category, _) -> CategoryUtils.getCategoryDisplayName(category) }
-                .toSortedMap(compareBy { displayName ->
-                    val lowercaseKey = CategoryUtils.getAllCategories()
-                        .entries.find { it.value == displayName }?.key ?: ""
-                    CategoryUtils.getCategoryOrder().indexOf(lowercaseKey)
-                })
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = emptyMap()
-        )
-
-    // The 2 most recently logged serving combos — used by quick add on AddScreen.
-    val recentDrinks: StateFlow<List<RecentDrink>> = logDao
-        .getRecentlyUsedDrinks()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = emptyList()
-        )
-
     // Today's caffeine total — the big number
     val todayTotalMg: StateFlow<Int> = combine(
         allConsumptionEntries,
@@ -231,6 +197,70 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = 0
+        )
+
+    // Today's raw entries — used by the Add screen to project caffeine level at bedtime
+    val todayEntries: StateFlow<List<ConsumptionEntry>> = combine(
+        allConsumptionEntries,
+        userSettings,
+        chartTickerFlow
+    ) { entries, settings, currentTime ->
+        val zoneId = settings.resolvedZoneId()
+        val startOfDay = startOfDayMillis(currentTime, zoneId)
+        val startOfNextDay = nextStartOfDayMillis(currentTime, zoneId)
+        entries.filter { entry -> entry.startedAtMillis in startOfDay until startOfNextDay }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = emptyList()
+    )
+
+    // The 2 most recently logged serving combos — used by quick add on AddScreen.
+    val recentDrinks: StateFlow<List<RecentDrink>> = logDao
+        .getRecentlyUsedDrinks()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = emptyList()
+        )
+
+    // Grouped drink catalog by category — used by the Add screen for categorized display
+    val groupedDrinkPresets: StateFlow<Map<String, List<DrinkPreset>>> =
+        combine(
+            drinkPresets,
+            selectedCategoryFilter,
+            searchQuery
+        ) { drinks, filter, query ->
+            val categoryFiltered = if (filter != null) {
+                val lowercaseKey = CategoryUtils.getAllCategories()
+                    .entries.find { it.value == filter }?.key ?: filter.lowercase()
+                drinks.filter { it.category.lowercase() == lowercaseKey }
+            } else {
+                drinks
+            }
+
+            val searchFiltered = if (query.isNotBlank()) {
+                categoryFiltered.filter { drink ->
+                    drink.name.contains(query, ignoreCase = true) ||
+                    drink.brand.contains(query, ignoreCase = true) ||
+                    drink.description?.contains(query, ignoreCase = true) == true
+                }
+            } else {
+                categoryFiltered
+            }
+
+            searchFiltered
+                .groupBy { it.category.lowercase() }
+                .mapKeys { (category, _) -> CategoryUtils.getCategoryDisplayName(category) }
+                .toSortedMap(compareBy { displayName ->
+                    val lowercaseKey = CategoryUtils.getAllCategories()
+                        .entries.find { it.value == displayName }?.key ?: ""
+                    CategoryUtils.getCategoryOrder().indexOf(lowercaseKey)
+                })
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = emptyMap()
         )
 
     // Full historical consumption timeline for the Home screen.
@@ -380,25 +410,9 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
     val analyticsTimeOfDayChartModelProducer = CartesianChartModelProducer()
 
     init {
-        viewModelScope.launch {
-            chartData.collect { data ->
-                if (data.dataPoints.isNotEmpty()) {
-                    val xValues = data.dataPoints.map { point ->
-                        ChartDataGenerator.timestampToDomainX(
-                            domainStartMillis = data.domainStartMillis,
-                            targetTimestampMillis = point.timestampMillis,
-                        )
-                    }
-                    val yValues = data.dataPoints.map { it.caffeineLevel }
-
-                    chartModelProducer.runTransaction {
-                        lineSeries {
-                            series(xValues, yValues)
-                        }
-                    }
-                }
-            }
-        }
+        // NOTE: chartModelProducer is updated inside CaffeineChart's
+        // LaunchedEffect, co-located with the axis/range setup, to avoid
+        // desync between model data and chart configuration.
 
         viewModelScope.launch {
             analyticsUiState.collect { state ->
@@ -427,15 +441,19 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             val defaultUnit = unitDao.getDefaultUnit(preset.id)
                 ?: fallbackUnitForPreset(preset)
-            logDao.logDrink(
-                buildConsumptionEntry(
-                    preset = preset,
-                    quantity = 1,
-                    unit = defaultUnit,
-                    startedAtMillis = System.currentTimeMillis(),
-                    durationMinutes = DEFAULT_CONSUMPTION_DURATION_MINUTES,
-                )
+            val entry = buildConsumptionEntry(
+                preset = preset,
+                quantity = 1,
+                unit = defaultUnit,
+                startedAtMillis = System.currentTimeMillis(),
+                durationMinutes = DEFAULT_CONSUMPTION_DURATION_MINUTES,
             )
+            logDao.logDrink(entry)
+            val settings = userSettings.value
+            if (settings.healthConnectEnabled) {
+                val zoneId = java.time.ZoneId.of(settings.timeZoneId)
+                runCatching { healthConnectManager.writeEntry(entry, zoneId) }
+            }
         }
     }
 
@@ -447,38 +465,46 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         durationMinutes: Int,
     ) {
         viewModelScope.launch {
-            logDao.logDrink(
-                buildConsumptionEntry(
-                    preset = preset,
-                    quantity = quantity,
-                    unit = unit,
-                    startedAtMillis = startedAtMillis,
-                    durationMinutes = durationMinutes,
-                )
+            val entry = buildConsumptionEntry(
+                preset = preset,
+                quantity = quantity,
+                unit = unit,
+                startedAtMillis = startedAtMillis,
+                durationMinutes = durationMinutes,
             )
+            logDao.logDrink(entry)
             addScreenEventsChannel.send(AddScreenUiEvent.DrinkLogged(preset.name))
+            val settings = userSettings.value
+            if (settings.healthConnectEnabled) {
+                val zoneId = java.time.ZoneId.of(settings.timeZoneId)
+                runCatching { healthConnectManager.writeEntry(entry, zoneId) }
+            }
         }
     }
 
     // Log from a RecentDrink (tapped from AddScreen quick add)
     fun logRecentDrink(recent: RecentDrink) {
         viewModelScope.launch {
-            logDao.logDrink(
-                ConsumptionEntry(
-                    drinkName  = recent.drinkName,
-                    caffeineMg = recent.caffeineMg,
-                    emoji      = recent.emoji,
-                    presetItemId = recent.presetItemId,
-                    quantity = recent.quantity,
-                    unitKey = recent.unitKey,
-                    unitCaffeineMg = recent.unitCaffeineMg,
-                    imageName  = recent.imageName,
-                    absorptionRate = recent.absorptionRate,
-                    startedAtMillis = System.currentTimeMillis(),
-                    durationMinutes = recent.durationMinutes,
-                )
+            val entry = ConsumptionEntry(
+                drinkName  = recent.drinkName,
+                caffeineMg = recent.caffeineMg,
+                emoji      = recent.emoji,
+                presetItemId = recent.presetItemId,
+                quantity = recent.quantity,
+                unitKey = recent.unitKey,
+                unitCaffeineMg = recent.unitCaffeineMg,
+                imageName  = recent.imageName,
+                absorptionRate = recent.absorptionRate,
+                startedAtMillis = System.currentTimeMillis(),
+                durationMinutes = recent.durationMinutes,
             )
+            logDao.logDrink(entry)
             addScreenEventsChannel.send(AddScreenUiEvent.DrinkLogged(recent.drinkName))
+            val settings = userSettings.value
+            if (settings.healthConnectEnabled) {
+                val zoneId = java.time.ZoneId.of(settings.timeZoneId)
+                runCatching { healthConnectManager.writeEntry(entry, zoneId) }
+            }
         }
     }
 
@@ -654,6 +680,41 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun updateHealthConnectEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepo.updateHealthConnectEnabled(enabled)
+            if (enabled) {
+                val settings = userSettings.value
+                val zoneId = java.time.ZoneId.of(settings.timeZoneId)
+                val entries = logDao.getAllEntriesOnce()
+                runCatching { healthConnectManager.syncAll(entries, zoneId) }
+            }
+        }
+    }
+
+    fun updateHcSleepEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepo.updateHcSleepEnabled(enabled)
+            if (enabled) refreshHcSleepData()
+        }
+    }
+
+    fun updateHcSleepMode(mode: com.uc.caffeine.data.HcSleepMode) {
+        viewModelScope.launch {
+            settingsRepo.updateHcSleepMode(mode)
+            if (userSettings.value.hcSleepEnabled) refreshHcSleepData()
+        }
+    }
+
+    private suspend fun refreshHcSleepData() {
+        val settings = userSettings.value
+        val zoneId = java.time.ZoneId.of(settings.timeZoneId)
+        val bedtime = runCatching {
+            healthConnectManager.readSleepBedtime(settings.hcSleepMode, zoneId)
+        }.getOrNull() ?: return
+        settingsRepo.saveHcSleepTime(bedtime.hour, bedtime.minute)
+    }
+
     // Profile factor update functions — each saves the raw value and recomputes the derived profile.
     fun updateProfileAgeBucket(ageBucket: AgeBucket?) {
         updateProfileFactorAndRecompute {
@@ -800,6 +861,56 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         return unitDao.getUnitsForPresetItemId(presetItemId)
     }
 
+    suspend fun copyCustomDrinkImage(uri: Uri): String? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val dir = File(getApplication<Application>().filesDir, "custom_drinks")
+                dir.mkdirs()
+                val file = File(dir, "${System.currentTimeMillis()}.jpg")
+                getApplication<Application>().contentResolver.openInputStream(uri)?.use { input ->
+                    file.outputStream().use { output -> input.copyTo(output) }
+                }
+                file.absolutePath
+            } catch (e: Exception) {
+                null
+            }
+        }
+    }
+
+    fun saveCustomDrink(
+        name: String,
+        emoji: String,
+        imageUri: String,
+        category: String,
+        unitKey: String,
+        caffeineMg: Double,
+    ) {
+        viewModelScope.launch {
+            val preset = DrinkPreset(
+                itemId = "custom-${System.currentTimeMillis()}",
+                name = name,
+                emoji = emoji,
+                imageName = imageUri,
+                category = category,
+                defaultUnit = unitKey,
+                defaultCaffeineMg = caffeineMg.toInt(),
+                isCustom = true,
+                relevance = 10000,
+            )
+            val presetId = presetDao.insertAndGetId(preset).toInt()
+            unitDao.insert(
+                DrinkUnit(
+                    drinkId = presetId,
+                    unitKey = unitKey,
+                    caffeineMg = caffeineMg,
+                    milliliters = null,
+                    grams = null,
+                    isDefault = true,
+                )
+            )
+        }
+    }
+
     private fun buildConsumptionEntry(
         preset: DrinkPreset,
         quantity: Int,
@@ -832,5 +943,35 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
             grams = null,
             isDefault = true,
         )
+    }
+
+    suspend fun createBackupJson(settings: UserSettings): String = withContext(Dispatchers.IO) {
+        backupManager.createBackup(settings)
+    }
+
+    fun importBackup(json: String, mode: com.uc.caffeine.data.ImportMode) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _myDataState.value = MyDataUiState.Working
+            try {
+                backupManager.restoreBackup(json, mode)
+                _myDataState.value = MyDataUiState.Success("Data imported successfully")
+            } catch (e: IllegalArgumentException) {
+                _myDataState.value = MyDataUiState.Error(e.message ?: "Invalid backup file")
+            } catch (e: Exception) {
+                _myDataState.value = MyDataUiState.Error("Import failed: ${e.message ?: "Unknown error"}")
+            }
+        }
+    }
+
+    fun onExportSuccess() {
+        _myDataState.value = MyDataUiState.Success("Backup saved")
+    }
+
+    fun onExportError(message: String) {
+        _myDataState.value = MyDataUiState.Error(message)
+    }
+
+    fun clearMyDataState() {
+        _myDataState.value = MyDataUiState.Idle
     }
 }
