@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="190dp"
+    android:viewportWidth="200"
+    android:viewportHeight="190">
+
+    <!-- Steam — three soft curves -->
+    <path
+        android:pathData="M82,50 C 78,42 86,38 82,30"
+        android:strokeColor="#DDB892"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:strokeAlpha="0.45" />
+    <path
+        android:pathData="M100,46 C 96,36 104,32 100,22"
+        android:strokeColor="#DDB892"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:strokeAlpha="0.45" />
+    <path
+        android:pathData="M118,50 C 114,42 122,38 118,30"
+        android:strokeColor="#DDB892"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:strokeAlpha="0.45" />
+
+    <!-- Saucer shadow -->
+    <path
+        android:pathData="M 100,156 m -62,0 a 62,8 0 1,0 124,0 a 62,8 0 1,0 -124,0 Z"
+        android:fillColor="#DDB892"
+        android:fillAlpha="0.18" />
+
+    <!-- Cup body -->
+    <path
+        android:pathData="M58,78 L142,78 L138,138 Q138,152 122,152 L78,152 Q62,152 62,138 Z"
+        android:fillColor="#DDB892" />
+
+    <!-- Handle -->
+    <path
+        android:pathData="M142,92 Q 168,96 168,118 Q 168,138 144,138"
+        android:strokeColor="#DDB892"
+        android:strokeWidth="8"
+        android:strokeLineCap="round" />
+</vector>
