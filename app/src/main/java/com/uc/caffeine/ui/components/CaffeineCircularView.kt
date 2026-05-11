@@ -2,13 +2,12 @@ package com.uc.caffeine.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -20,6 +19,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.min
 import com.uc.caffeine.R
 
 @Composable
@@ -32,10 +32,14 @@ fun CaffeineCircularView(
     val strokeWidthPx = with(LocalDensity.current) { 16.dp.toPx() }
     val indicatorStroke = Stroke(width = strokeWidthPx)
 
-    Box(
+    BoxWithConstraints(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
+        // Size the indicator to fit within whichever dimension is smaller,
+        // leaving room for the threshold label below.
+        val indicatorSize = min(maxWidth * 0.88f, maxHeight * 0.78f)
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
@@ -43,10 +47,7 @@ fun CaffeineCircularView(
             Box(contentAlignment = Alignment.Center) {
                 CircularWavyProgressIndicator(
                     progress = { progress },
-                    modifier = Modifier
-                        .widthIn(max = 350.dp)
-                        .fillMaxWidth(0.9f)
-                        .aspectRatio(1f),
+                    modifier = Modifier.size(indicatorSize),
                     color = MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.surfaceVariant,
                     stroke = indicatorStroke,
