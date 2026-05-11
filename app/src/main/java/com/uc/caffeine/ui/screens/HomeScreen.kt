@@ -165,78 +165,82 @@ fun HomeScreen(
     CaffeineScreenScaffold(
         title = stringResource(R.string.home_title)
     ) { bottomPadding ->
-        ElevatedCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(300.dp),
-            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp),
-            colors = CardDefaults.elevatedCardColors(
-                containerColor = CaffeineSurfaceDefaults.chartContainerColor,
-            ),
-        ) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                if (isConsumptionEntriesLoading) {
-                    ContainedLoadingIndicator(
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                } else {
-                    AnimatedContent(
-                        targetState = userSettings.homeViewMode,
-                        transitionSpec = {
-                            (fadeIn(animationSpec = tween(220, delayMillis = 90))) togetherWith
-                                fadeOut(animationSpec = tween(90))
-                        },
-                        label = "home_view_mode",
-                    ) { viewMode ->
-                        when (viewMode) {
-                            HomeViewMode.GRAPH -> CaffeineChart(
-                                chartData = chartData,
-                                modelProducer = viewModel.chartModelProducer,
-                                userSettings = userSettings,
-                                liveNowMillis = liveNowMillis,
-                                currentCaffeineLevel = currentLevel,
-                                predictedBedtimeCaffeineLevel = bedtimeForecast.first,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 12.dp),
-                                onEntryClick = { entryId ->
-                                    val entry = groupedConsumptionEntries.values
-                                        .flatten()
-                                        .find { it.id == entryId }
-                                    if (entry != null) {
-                                        haptics.navigation()
-                                        selectedEntry = entry
+        Box(modifier = Modifier.fillMaxWidth()) {
+            val isCircular = userSettings.homeViewMode == HomeViewMode.CIRCULAR
+
+            ElevatedCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 20.dp)
+                    .height(300.dp),
+                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp),
+                colors = CardDefaults.elevatedCardColors(
+                    containerColor = CaffeineSurfaceDefaults.chartContainerColor,
+                ),
+            ) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    if (isConsumptionEntriesLoading) {
+                        ContainedLoadingIndicator(
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    } else {
+                        AnimatedContent(
+                            targetState = userSettings.homeViewMode,
+                            transitionSpec = {
+                                (fadeIn(animationSpec = tween(220, delayMillis = 90))) togetherWith
+                                    fadeOut(animationSpec = tween(90))
+                            },
+                            label = "home_view_mode",
+                        ) { viewMode ->
+                            when (viewMode) {
+                                HomeViewMode.GRAPH -> CaffeineChart(
+                                    chartData = chartData,
+                                    modelProducer = viewModel.chartModelProducer,
+                                    userSettings = userSettings,
+                                    liveNowMillis = liveNowMillis,
+                                    currentCaffeineLevel = currentLevel,
+                                    predictedBedtimeCaffeineLevel = bedtimeForecast.first,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 12.dp),
+                                    onEntryClick = { entryId ->
+                                        val entry = groupedConsumptionEntries.values
+                                            .flatten()
+                                            .find { it.id == entryId }
+                                        if (entry != null) {
+                                            haptics.navigation()
+                                            selectedEntry = entry
+                                        }
                                     }
-                                }
-                            )
-                            HomeViewMode.CIRCULAR -> CaffeineCircularView(
-                                currentMg = currentLevel,
-                                maxMg = userSettings.sleepThresholdMg.toDouble(),
-                                modifier = Modifier.fillMaxSize(),
-                            )
+                                )
+                                HomeViewMode.CIRCULAR -> CaffeineCircularView(
+                                    currentMg = currentLevel,
+                                    maxMg = userSettings.sleepThresholdMg.toDouble(),
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                            }
                         }
                     }
                 }
+            }
 
-                val isCircular = userSettings.homeViewMode == HomeViewMode.CIRCULAR
-                IconButton(
-                    onClick = {
-                        haptics.toggle()
-                        viewModel.updateHomeViewMode(
-                            if (isCircular) HomeViewMode.GRAPH else HomeViewMode.CIRCULAR
-                        )
-                    },
-                    modifier = Modifier.align(Alignment.TopEnd),
-                ) {
-                    Icon(
-                        imageVector = if (isCircular) Icons.Default.BarChart else Icons.Default.DonutLarge,
-                        contentDescription = stringResource(
-                            if (isCircular) R.string.home_view_toggle_to_graph_cd
-                            else R.string.home_view_toggle_to_circular_cd
-                        ),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            IconButton(
+                onClick = {
+                    haptics.toggle()
+                    viewModel.updateHomeViewMode(
+                        if (isCircular) HomeViewMode.GRAPH else HomeViewMode.CIRCULAR
                     )
-                }
+                },
+                modifier = Modifier.align(Alignment.TopEnd),
+            ) {
+                Icon(
+                    imageVector = if (isCircular) Icons.Default.BarChart else Icons.Default.DonutLarge,
+                    contentDescription = stringResource(
+                        if (isCircular) R.string.home_view_toggle_to_graph_cd
+                        else R.string.home_view_toggle_to_circular_cd
+                    ),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
 
