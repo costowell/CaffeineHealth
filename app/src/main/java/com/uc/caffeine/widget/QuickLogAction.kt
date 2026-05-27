@@ -5,13 +5,16 @@ import android.widget.Toast
 import androidx.glance.GlanceId
 import androidx.glance.action.ActionParameters
 import androidx.glance.appwidget.action.ActionCallback
-import androidx.glance.appwidget.updateAll
 import com.uc.caffeine.R
 import com.uc.caffeine.data.CaffeineDatabase
+import com.uc.caffeine.data.HealthConnectManager
+import com.uc.caffeine.data.SettingsRepository
 import com.uc.caffeine.data.model.ConsumptionEntry
 import com.uc.caffeine.data.model.DEFAULT_CONSUMPTION_DURATION_MINUTES
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import java.time.ZoneId
 
 class QuickLogAction : ActionCallback {
     companion object {
@@ -47,7 +50,13 @@ class QuickLogAction : ActionCallback {
         )
 
         withContext(Dispatchers.IO) {
-            CaffeineDatabase.getDatabase(context).consumptionLogDao().logDrink(entry)
+            val db = CaffeineDatabase.getDatabase(context)
+            val newId = db.consumptionLogDao().logDrink(entry)
+            val settings = SettingsRepository(context).settingsFlow.first()
+            if (settings.healthConnectEnabled) {
+                val zoneId = ZoneId.of(settings.timeZoneId)
+                HealthConnectManager(context).writeEntry(entry.copy(id = newId.toInt()), zoneId)
+            }
         }
 
         withContext(Dispatchers.Main) {

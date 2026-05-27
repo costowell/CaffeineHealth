@@ -10,9 +10,9 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ConsumptionLogDao {
 
-    // Log a drink — inserts one row into consumption_log
+    // Log a drink — inserts one row into consumption_log; returns the new row's id
     @Insert
-    suspend fun logDrink(entry: ConsumptionEntry)
+    suspend fun logDrink(entry: ConsumptionEntry): Long
 
     @Query(
         """
@@ -57,6 +57,14 @@ interface ConsumptionLogDao {
     // One-shot read of all entries — used for Health Connect bulk sync
     @Query("SELECT * FROM consumption_log ORDER BY startedAtMillis DESC")
     suspend fun getAllEntriesOnce(): List<ConsumptionEntry>
+
+    // One-shot today read — used by Reset Today to collect HC record ids before clearing
+    @Query("SELECT * FROM consumption_log WHERE startedAtMillis >= :startOfDay ORDER BY startedAtMillis DESC")
+    suspend fun getTodayEntriesOnce(startOfDay: Long): List<ConsumptionEntry>
+
+    // Returns all HC record ids we've already imported (for dedup)
+    @Query("SELECT healthConnectRecordId FROM consumption_log WHERE healthConnectRecordId IS NOT NULL")
+    suspend fun getImportedHealthConnectRecordIds(): List<String>
 
     // Delete all entries from today — the "Reset Today" button
     @Query("DELETE FROM consumption_log WHERE startedAtMillis >= :startOfDay")

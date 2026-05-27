@@ -25,7 +25,7 @@
     <string name="settings_date_time_title">Date and Time</string>
     <string name="settings_date_time_summary">Clock, date format, timezone</string>
     <string name="settings_health_connect_title">Health Connect</string>
-    <string name="settings_health_connect_summary">Sync caffeine data to Health Connect</string>
+    <string name="settings_health_connect_summary">Sync caffeine both ways with Health Connect</string>
     <string name="settings_my_data_title">My Data</string>
     <string name="settings_my_data_summary">Export and import your data</string>
     <string name="settings_notifications_title">Notifications</string>
@@ -144,7 +144,8 @@
     <string name="health_connect_caffeine_and_sleep_active">Caffeine sync and sleep data active</string>
     <string name="health_connect_caffeine_active">Caffeine sync active</string>
     <string name="health_connect_sleep_active">Sleep data active</string>
-    <string name="health_connect_description"><![CDATA[Syncs your <b>caffeine intake</b> and if sleep access is granted, <b>auto-sets your bedtime</b> from Health Connect.]]></string>
+    <string name="health_connect_description"><![CDATA[Pushes your <b>caffeine logs</b> to Health Connect and imports caffeine records from other apps. If sleep access is granted, also <b>auto-sets your bedtime</b>.]]></string>
+    <string name="health_connect_imported_drink_name">Caffeine</string>
     <string name="health_connect_no_sleep_warning">No sleep data found in Health Connect. Your manual bedtime is used until sleep sessions are recorded.</string>
     <string name="health_connect_bedtime_source">Bedtime source</string>
     <string name="health_connect_last_night">Last night\'s sleep</string>

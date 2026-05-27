@@ -24,6 +24,7 @@ import com.uc.caffeine.ui.onboarding.OnboardingAnswers
 import com.uc.caffeine.ui.onboarding.OnboardingProfileCalculator
 import com.uc.caffeine.ui.onboarding.SmokingHabit
 import com.uc.caffeine.ui.onboarding.WeightUnit
+import com.uc.caffeine.R
 import com.uc.caffeine.data.model.ConsumptionEntry
 import com.uc.caffeine.data.model.DEFAULT_CONSUMPTION_DURATION_MINUTES
 import com.uc.caffeine.data.model.DrinkPreset
@@ -57,6 +58,9 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+
+private const val HEALTH_CONNECT_IMPORT_WINDOW_MILLIS = 30L * 24 * 60 * 60 * 1000
+
 sealed interface AddScreenUiEvent {
     data class DrinkLogged(val drinkName: String) : AddScreenUiEvent
 }
@@ -485,12 +489,12 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                 startedAtMillis = System.currentTimeMillis(),
                 durationMinutes = DEFAULT_CONSUMPTION_DURATION_MINUTES,
             )
-            logDao.logDrink(entry)
+            val newId = logDao.logDrink(entry)
             triggerWidgetRefresh()
             val settings = userSettings.value
             if (settings.healthConnectEnabled) {
                 val zoneId = java.time.ZoneId.of(settings.timeZoneId)
-                runCatching { healthConnectManager.writeEntry(entry, zoneId) }
+                runCatching { healthConnectManager.writeEntry(entry.copy(id = newId.toInt()), zoneId) }
             }
         }
     }
@@ -510,13 +514,13 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                 startedAtMillis = startedAtMillis,
                 durationMinutes = durationMinutes,
             )
-            logDao.logDrink(entry)
+            val newId = logDao.logDrink(entry)
             triggerWidgetRefresh()
             addScreenEventsChannel.send(AddScreenUiEvent.DrinkLogged(preset.name))
             val settings = userSettings.value
             if (settings.healthConnectEnabled) {
                 val zoneId = java.time.ZoneId.of(settings.timeZoneId)
-                runCatching { healthConnectManager.writeEntry(entry, zoneId) }
+                runCatching { healthConnectManager.writeEntry(entry.copy(id = newId.toInt()), zoneId) }
             }
         }
     }
@@ -537,13 +541,13 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                 startedAtMillis = System.currentTimeMillis(),
                 durationMinutes = recent.durationMinutes,
             )
-            logDao.logDrink(entry)
+            val newId = logDao.logDrink(entry)
             triggerWidgetRefresh()
             addScreenEventsChannel.send(AddScreenUiEvent.DrinkLogged(recent.drinkName))
             val settings = userSettings.value
             if (settings.healthConnectEnabled) {
                 val zoneId = java.time.ZoneId.of(settings.timeZoneId)
-                runCatching { healthConnectManager.writeEntry(entry, zoneId) }
+                runCatching { healthConnectManager.writeEntry(entry.copy(id = newId.toInt()), zoneId) }
             }
         }
     }
@@ -567,34 +571,54 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         durationMinutes: Int,
     ) {
         viewModelScope.launch {
+            val newCaffeineMg = calculateServingTotalCaffeine(quantity, unit.caffeineMg)
+            val coercedDuration = durationMinutes.coerceAtLeast(1)
             logDao.updateEntryById(
                 entryId = entry.id,
-                caffeineMg = calculateServingTotalCaffeine(quantity, unit.caffeineMg),
+                caffeineMg = newCaffeineMg,
                 quantity = quantity,
                 unitKey = unit.unitKey,
                 unitCaffeineMg = unit.caffeineMg,
                 startedAtMillis = startedAtMillis,
-                durationMinutes = durationMinutes.coerceAtLeast(1),
+                durationMinutes = coercedDuration,
             )
             triggerWidgetRefresh()
             homeScreenEventsChannel.send(
                 HomeScreenUiEvent.LogActionCompleted("Updated ${entry.drinkName}")
             )
+            val settings = userSettings.value
+            if (settings.healthConnectEnabled) {
+                val updatedEntry = entry.copy(
+                    caffeineMg = newCaffeineMg,
+                    quantity = quantity,
+                    unitKey = unit.unitKey,
+                    unitCaffeineMg = unit.caffeineMg,
+                    startedAtMillis = startedAtMillis,
+                    durationMinutes = coercedDuration,
+                )
+                val zoneId = java.time.ZoneId.of(settings.timeZoneId)
+                runCatching { healthConnectManager.writeEntry(updatedEntry, zoneId) }
+            }
         }
     }
 
     fun duplicateLoggedEntry(entry: ConsumptionEntry) {
         viewModelScope.launch {
-            logDao.logDrink(
-                entry.copy(
-                    id = 0,
-                    startedAtMillis = System.currentTimeMillis()
-                )
+            val duplicate = entry.copy(
+                id = 0,
+                startedAtMillis = System.currentTimeMillis(),
+                healthConnectRecordId = null,
             )
+            val newId = logDao.logDrink(duplicate)
             triggerWidgetRefresh()
             homeScreenEventsChannel.send(
                 HomeScreenUiEvent.LogActionCompleted("Logged ${entry.drinkName} again")
             )
+            val settings = userSettings.value
+            if (settings.healthConnectEnabled) {
+                val zoneId = java.time.ZoneId.of(settings.timeZoneId)
+                runCatching { healthConnectManager.writeEntry(duplicate.copy(id = newId.toInt()), zoneId) }
+            }
         }
     }
 
@@ -611,18 +635,26 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
             homeScreenEventsChannel.send(
                 HomeScreenUiEvent.LogActionCompleted("Deleted ${entry.drinkName}")
             )
+            val settings = userSettings.value
+            if (settings.healthConnectEnabled) {
+                runCatching { healthConnectManager.deleteEntry(entry) }
+            }
         }
     }
 
     fun resetToday() {
         viewModelScope.launch {
-            logDao.clearToday(
-                startOfDayMillis(
-                    currentTimeMillis = System.currentTimeMillis(),
-                    zoneId = userSettings.value.resolvedZoneId()
-                )
+            val settings = userSettings.value
+            val startOfDay = startOfDayMillis(
+                currentTimeMillis = System.currentTimeMillis(),
+                zoneId = settings.resolvedZoneId()
             )
+            val todayEntriesToDelete = logDao.getTodayEntriesOnce(startOfDay)
+            logDao.clearToday(startOfDay)
             triggerWidgetRefresh()
+            if (settings.healthConnectEnabled) {
+                runCatching { healthConnectManager.deleteEntries(todayEntriesToDelete) }
+            }
         }
     }
 
@@ -762,6 +794,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                 val zoneId = java.time.ZoneId.of(settings.timeZoneId)
                 val entries = logDao.getAllEntriesOnce()
                 runCatching { healthConnectManager.syncAll(entries, zoneId) }
+                importForeignCaffeine()
             }
         }
     }
@@ -808,7 +841,34 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                 com.uc.caffeine.util.notifications.NotificationScheduler.scheduleInactivityReminder(getApplication())
             }
             if (settings.hcSleepEnabled) refreshHcSleepData()
+            if (settings.healthConnectEnabled) importForeignCaffeine()
         }
+    }
+
+    private suspend fun importForeignCaffeine() {
+        if (!userSettings.value.healthConnectEnabled) return
+        val sinceMillis = System.currentTimeMillis() - HEALTH_CONNECT_IMPORT_WINDOW_MILLIS
+        val existingIds = logDao.getImportedHealthConnectRecordIds().toSet()
+        val imported = runCatching {
+            healthConnectManager.readForeignCaffeineRecords(sinceMillis, existingIds)
+        }.getOrDefault(emptyList())
+        if (imported.isEmpty()) return
+        val importedName = getApplication<android.app.Application>()
+            .getString(R.string.health_connect_imported_drink_name)
+        imported.forEach { record ->
+            logDao.logDrink(
+                ConsumptionEntry(
+                    drinkName = importedName,
+                    caffeineMg = record.caffeineMg,
+                    emoji = "☕",
+                    unitCaffeineMg = record.caffeineMg.toDouble(),
+                    startedAtMillis = record.startedAtMillis,
+                    durationMinutes = record.durationMinutes,
+                    healthConnectRecordId = record.healthConnectRecordId,
+                )
+            )
+        }
+        triggerWidgetRefresh()
     }
 
     private suspend fun refreshHcSleepData() {

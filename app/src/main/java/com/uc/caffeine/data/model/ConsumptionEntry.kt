@@ -44,6 +44,10 @@ data class ConsumptionEntry(
 
     // The number of whole minutes the user takes to finish the drink.
     val durationMinutes: Int = DEFAULT_CONSUMPTION_DURATION_MINUTES,
+
+    // Non-null = this row was imported from another app via Health Connect (we don't own it).
+    // Null = logged by this app (we own it and push it to HC).
+    val healthConnectRecordId: String? = null,
 ) {
     val normalizedDurationMinutes: Int
         get() = durationMinutes.coerceAtLeast(1)

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.uc.caffeine.data.dao.ConsumptionLogDao
 import com.uc.caffeine.data.dao.DrinkPresetDao
@@ -18,7 +19,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [DrinkPreset::class, DrinkUnit::class, ConsumptionEntry::class],
-    version = 9,
+    version = 10,
     exportSchema = false
 )
 abstract class CaffeineDatabase : RoomDatabase() {
@@ -31,6 +32,12 @@ abstract class CaffeineDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: CaffeineDatabase? = null
 
+        private val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE consumption_log ADD COLUMN healthConnectRecordId TEXT")
+            }
+        }
+
         fun getDatabase(context: Context): CaffeineDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -38,6 +45,7 @@ abstract class CaffeineDatabase : RoomDatabase() {
                     CaffeineDatabase::class.java,
                     "caffeine_database"
                 )
+                    .addMigrations(MIGRATION_9_10)
                     .addCallback(object : RoomDatabase.Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)

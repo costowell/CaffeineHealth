@@ -15,11 +15,21 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
+data class ImportedCaffeineRecord(
+    val healthConnectRecordId: String,
+    val caffeineMg: Int,
+    val startedAtMillis: Long,
+    val durationMinutes: Int,
+)
+
 class HealthConnectManager(private val context: Context) {
 
-    val permissions = setOf(HealthPermission.getWritePermission(NutritionRecord::class))
-    val sleepPermissions = setOf(HealthPermission.getReadPermission(SleepSessionRecord::class))
-    val allPermissions = permissions + sleepPermissions
+    private val nutritionWrite = HealthPermission.getWritePermission(NutritionRecord::class)
+    private val nutritionRead  = HealthPermission.getReadPermission(NutritionRecord::class)
+    private val sleepRead      = HealthPermission.getReadPermission(SleepSessionRecord::class)
+
+    val allPermissions = setOf(nutritionWrite, nutritionRead, sleepRead)
+    val sleepPermissions = setOf(sleepRead)
 
     fun isAvailable(): Boolean =
         HealthConnectClient.getSdkStatus(context) == HealthConnectClient.SDK_AVAILABLE
@@ -29,35 +39,112 @@ class HealthConnectManager(private val context: Context) {
 
     suspend fun hasPermission(): Boolean {
         val c = client ?: return false
-        return c.permissionController.getGrantedPermissions().containsAll(permissions)
+        return c.permissionController.getGrantedPermissions().contains(nutritionWrite)
+    }
+
+    suspend fun hasNutritionReadPermission(): Boolean {
+        val c = client ?: return false
+        return c.permissionController.getGrantedPermissions().contains(nutritionRead)
     }
 
     suspend fun hasSleepPermission(): Boolean {
         val c = client ?: return false
-        return c.permissionController.getGrantedPermissions().containsAll(sleepPermissions)
+        return c.permissionController.getGrantedPermissions().contains(sleepRead)
     }
+
+    private fun clientRecordId(entryId: Int): String = "caffeine_entry_$entryId"
 
     suspend fun writeEntry(entry: ConsumptionEntry, zoneId: ZoneId = ZoneId.systemDefault()) {
         val c = client ?: return
+        // Imported records are owned by another app — never echo them back
+        if (entry.healthConnectRecordId != null) return
+        if (!hasPermission()) return
         val start = Instant.ofEpochMilli(entry.startedAtMillis)
-        val end = start.plusSeconds(entry.durationMinutes * 60L)
+        val end = start.plusSeconds(entry.normalizedDurationMinutes * 60L)
         val zoneRules = zoneId.rules
-        c.insertRecords(
-            listOf(
+        runCatching {
+            c.insertRecords(listOf(
                 NutritionRecord(
                     startTime = start,
                     endTime = end,
                     caffeine = Mass.milligrams(entry.caffeineMg.toDouble()),
+                    name = entry.drinkName,
                     startZoneOffset = zoneRules.getOffset(start),
                     endZoneOffset = zoneRules.getOffset(end),
-                    metadata = HCMetadata.unknownRecordingMethod(),
+                    metadata = HCMetadata.manualEntry(
+                        clientRecordId = clientRecordId(entry.id),
+                        clientRecordVersion = System.currentTimeMillis(),
+                    ),
                 )
-            )
-        )
+            ))
+        }
     }
 
     suspend fun syncAll(entries: List<ConsumptionEntry>, zoneId: ZoneId = ZoneId.systemDefault()) {
         entries.forEach { writeEntry(it, zoneId) }
+    }
+
+    suspend fun deleteEntry(entry: ConsumptionEntry) {
+        if (entry.healthConnectRecordId != null) return
+        deleteOwnRecords(listOf(entry.id))
+    }
+
+    suspend fun deleteEntries(entries: List<ConsumptionEntry>) {
+        val ownIds = entries.filter { it.healthConnectRecordId == null }.map { it.id }
+        if (ownIds.isEmpty()) return
+        deleteOwnRecords(ownIds)
+    }
+
+    private suspend fun deleteOwnRecords(entryIds: List<Int>) {
+        val c = client ?: return
+        if (!hasPermission()) return
+        val clientIds = entryIds.map { clientRecordId(it) }
+        runCatching {
+            c.deleteRecords(NutritionRecord::class, emptyList(), clientIds)
+        }
+    }
+
+    suspend fun readForeignCaffeineRecords(
+        sinceMillis: Long,
+        excludeRecordIds: Set<String>,
+    ): List<ImportedCaffeineRecord> {
+        val c = client ?: return emptyList()
+        if (!hasNutritionReadPermission()) return emptyList()
+        val results = mutableListOf<ImportedCaffeineRecord>()
+        var pageToken: String? = null
+        val ownPackage = context.packageName
+        do {
+            val response = runCatching {
+                c.readRecords(
+                    ReadRecordsRequest(
+                        recordType = NutritionRecord::class,
+                        timeRangeFilter = TimeRangeFilter.after(Instant.ofEpochMilli(sinceMillis)),
+                        pageToken = pageToken,
+                    )
+                )
+            }.getOrNull() ?: break
+
+            for (record in response.records) {
+                // Skip our own records
+                if (record.metadata.dataOrigin.packageName == ownPackage) continue
+                val caffeineMass = record.caffeine ?: continue
+                val mg = caffeineMass.inMilligrams.toInt()
+                if (mg <= 0) continue
+                val id = record.metadata.id
+                if (id.isBlank() || id in excludeRecordIds) continue
+                val durationSec = record.endTime.epochSecond - record.startTime.epochSecond
+                val durationMinutes = (durationSec / 60).toInt().coerceAtLeast(1)
+                results += ImportedCaffeineRecord(
+                    healthConnectRecordId = id,
+                    caffeineMg = mg,
+                    startedAtMillis = record.startTime.toEpochMilli(),
+                    durationMinutes = durationMinutes,
+                )
+            }
+            pageToken = response.pageToken
+        } while (pageToken != null)
+
+        return results
     }
 
     suspend fun readSleepBedtime(mode: HcSleepMode, zoneId: ZoneId = ZoneId.systemDefault()): LocalTime? {
@@ -95,7 +182,6 @@ class HealthConnectManager(private val context: Context) {
 
     private fun averageSleepStartTime(sessions: List<SleepSessionRecord>, zoneId: ZoneId): LocalTime? {
         if (sessions.isEmpty()) return null
-        // Times before noon are post-midnight bedtimes; add 24hr so averaging doesn't wrap wrong.
         val minutesList = sessions.map { session ->
             val zdt = session.startTime.atZone(zoneId)
             val minuteOfDay = zdt.hour * 60 + zdt.minute
