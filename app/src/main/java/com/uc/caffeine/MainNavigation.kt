@@ -8,7 +8,7 @@ import androidx.compose.material.icons.outlined.Analytics
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavKey
-import java.io.Serializable
+import kotlinx.serialization.Serializable
 
 sealed interface AppRoute : NavKey
 
@@ -36,7 +36,8 @@ enum class AppDestinations(
     ),
 }
 
-object AddRoute : AppRoute, Serializable
+@Serializable
+object AddRoute : AppRoute
 
 internal val toolbarDestinations = listOf(
     AppDestinations.HOME,
