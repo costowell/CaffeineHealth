@@ -13,8 +13,8 @@ android {
         applicationId = "com.uc.caffeine"
         minSdk = 31
         targetSdk = 36
-        versionCode = 8
-        versionName = "2.2.2-beta.2"
+        versionCode = 9
+        versionName = "2.2.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
