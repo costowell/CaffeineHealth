@@ -3,6 +3,7 @@ package com.uc.caffeine.ui.components
 import com.uc.caffeine.util.ChartConsumptionMarker
 import com.uc.caffeine.util.CaffeineDataPoint
 import com.uc.caffeine.util.ChartData
+import com.uc.caffeine.util.ChartMarkerEntry
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -51,7 +52,16 @@ class CaffeineChartTest {
             consumptionMarkers = listOf(
                 ChartConsumptionMarker(
                     xValue = 0.0,
-                    emojiLabel = "\u2615",
+                    yValue = 40.0,
+                    entries = listOf(
+                        ChartMarkerEntry(
+                            entryId = 1,
+                            drinkName = "Coffee",
+                            emoji = "\u2615",
+                            imageName = "",
+                            caffeineMg = 90,
+                        )
+                    ),
                     timestampMillis = 0L,
                 )
             ),

@@ -1,16 +1,21 @@
 package com.uc.caffeine.ui.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonGroupDefaults
@@ -18,6 +23,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleButton
@@ -33,51 +39,91 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.uc.caffeine.data.model.DrinkUnit
+import com.uc.caffeine.util.MIN_SERVING_QUANTITY
+import com.uc.caffeine.util.formatQuantity
 import com.uc.caffeine.util.formatUnitLabel
+import com.uc.caffeine.util.quantityStepFor
+import com.uc.caffeine.util.quickPickQuantitiesFor
 
 @Composable
 fun ServingQuantityStepper(
-    quantity: Int,
-    onDecrement: () -> Unit,
-    onIncrement: () -> Unit,
-    onQuantitySet: (Int) -> Unit = {},
+    quantity: Double,
+    unitKey: String,
+    onQuantityChange: (Double) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showInput by remember { mutableStateOf(false) }
+    val step = quantityStepFor(unitKey)
+    val quickPicks = remember(unitKey) { quickPickQuantitiesFor(unitKey) }
 
-    Row(
+    Column(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        IconButton(
-            onClick = onDecrement,
-            enabled = quantity > 1,
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                imageVector = Icons.Default.Remove,
-                contentDescription = "Decrease quantity",
-                modifier = Modifier.size(26.dp),
-            )
+            IconButton(
+                onClick = { onQuantityChange((quantity - step).coerceAtLeast(step)) },
+                enabled = quantity > step,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Remove,
+                    contentDescription = "Decrease quantity",
+                    modifier = Modifier.size(26.dp),
+                )
+            }
+
+            // The whole number area is tappable to type an exact (and fractional) amount.
+            // The small edit glyph makes that affordance discoverable.
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable { showInput = true }
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                RollingNumberText(
+                    text = formatQuantity(quantity),
+                    style = MaterialTheme.typography.displaySmall,
+                    horizontalArrangement = Arrangement.Center,
+                )
+                Spacer(Modifier.size(6.dp))
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Type exact quantity",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
+
+            IconButton(onClick = { onQuantityChange(quantity + step) }) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Increase quantity",
+                    modifier = Modifier.size(26.dp),
+                )
+            }
         }
 
-        RollingNumberText(
-            text = quantity.toString(),
-            style = MaterialTheme.typography.displaySmall,
-            modifier = Modifier
-                .weight(1f)
-                .clip(RoundedCornerShape(12.dp))
-                .clickable { showInput = true }
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.Center,
-        )
-
-        IconButton(onClick = onIncrement) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Increase quantity",
-                modifier = Modifier.size(26.dp),
-            )
+        if (quickPicks.isNotEmpty()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                quickPicks.forEach { value ->
+                    SuggestionChip(
+                        onClick = { onQuantityChange(value) },
+                        label = { Text("${formatQuantity(value)} ${formatUnitLabel(unitKey)}") },
+                    )
+                }
+            }
         }
     }
 
@@ -85,7 +131,7 @@ fun ServingQuantityStepper(
         QuantityInputDialog(
             currentQuantity = quantity,
             onConfirm = { value ->
-                onQuantitySet(value)
+                onQuantityChange(value)
                 showInput = false
             },
             onDismiss = { showInput = false },
@@ -95,16 +141,17 @@ fun ServingQuantityStepper(
 
 @Composable
 private fun QuantityInputDialog(
-    currentQuantity: Int,
-    onConfirm: (Int) -> Unit,
+    currentQuantity: Double,
+    onConfirm: (Double) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    var text by remember { mutableStateOf(currentQuantity.toString()) }
-    val parsed = text.toIntOrNull()
-    val isValid = parsed != null && parsed >= 1
+    var text by remember { mutableStateOf(formatQuantity(currentQuantity)) }
+    val parsed = text.toDoubleOrNull()
+    val isValid = parsed != null && parsed >= MIN_SERVING_QUANTITY
 
     fun confirm() {
-        if (isValid) onConfirm(parsed!!)
+        val value = text.toDoubleOrNull() ?: return
+        if (value >= MIN_SERVING_QUANTITY) onConfirm(value)
     }
 
     AlertDialog(
@@ -113,12 +160,12 @@ private fun QuantityInputDialog(
         text = {
             OutlinedTextField(
                 value = text,
-                onValueChange = { text = it.filter { c -> c.isDigit() }.trimStart('0').ifEmpty { "" } },
+                onValueChange = { text = sanitizeDecimalInput(it) },
                 label = { Text("Quantity") },
                 singleLine = true,
                 isError = !isValid && text.isNotEmpty(),
                 keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number,
+                    keyboardType = KeyboardType.Decimal,
                     imeAction = ImeAction.Done,
                 ),
                 keyboardActions = KeyboardActions(onDone = { confirm() }),
@@ -131,6 +178,16 @@ private fun QuantityInputDialog(
             TextButton(onClick = onDismiss) { Text("Cancel") }
         },
     )
+}
+
+// Keeps only digits and a single decimal point so the field always parses cleanly.
+private fun sanitizeDecimalInput(raw: String): String {
+    val filtered = raw.filter { it.isDigit() || it == '.' }
+    val firstDot = filtered.indexOf('.')
+    if (firstDot < 0) return filtered
+    val head = filtered.substring(0, firstDot + 1)
+    val tail = filtered.substring(firstDot + 1).replace(".", "")
+    return head + tail
 }
 
 @Composable

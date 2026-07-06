@@ -122,4 +122,21 @@
     <string name="profile_hormonal_status_description">La grossesse et les contraceptifs oraux peuvent ralentir fortement l’élimination de la caféine.</string>
     <string name="profile_effective_half_life">Demi-vie effective : %1$d h %2$d min</string>
     <string name="profile_clearance_factor_explanation">Base %1$d h ajustée par un facteur combiné de %2$s.</string>
+
+    <!-- Caffeine Coach (HomeScreen card) -->
+    <string name="coach_title">Coach caféine</string>
+    <string name="coach_headline_now">Prends environ %1$dmg maintenant</string>
+    <string name="coach_headline_at">Prends environ %1$dmg vers %2$s</string>
+    <string name="coach_reason_sleep_debt">Tu as dormi %1$s — la plus petite dose utile pour récupérer sans nuire à ton sommeil de cette nuit.</string>
+    <string name="coach_reason_afternoon_dip">Calé sur ton coup de barre de l’après-midi prévu — le minimum de caféine pour rester vif.</string>
+    <string name="coach_reason_stay_sharp">La plus petite dose pour rester au-dessus de ton niveau de concentration toute la journée.</string>
+    <string name="coach_residual_note">Redescend à ~%1$dmg pour ton coucher à %2$s.</string>
+    <string name="coach_hold_already_alert">Tout va bien — pas besoin de caféine pour rester vif maintenant.</string>
+    <string name="coach_hold_already_alert_debt">Tu tournes avec %1$s de sommeil, mais tu es assez alerte là — attends un peu.</string>
+    <string name="coach_hold_bedtime">Évite la caféine maintenant — c’est trop proche de ton coucher à %1$s pour en ajouter sans risquer ton sommeil.</string>
+    <string name="coach_connect_sleep">Connecte tes données de sommeil pour une recommandation adaptée à ta nuit réelle.</string>
+    <string name="coach_sleep_hours">%1$dh %2$dm</string>
+    <!-- Caffeine Coach settings -->
+    <string name="coach_setting_label">Coach caféine</string>
+    <string name="coach_setting_description">Suggère la plus petite dose, au meilleur moment, pour rester vif sans nuire au sommeil</string>
 </resources>

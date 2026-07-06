@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,8 +27,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -37,6 +40,14 @@ import androidx.compose.ui.unit.min
 import com.uc.caffeine.R
 import com.uc.caffeine.ui.viewmodel.CaffeineTrend
 
+// Progress here is caffeine relative to the sleep threshold and routinely sits at 100%,
+// where the M3 default amplitude flattens the wave — hiding the squiggle exactly when
+// there is the most caffeine to show. Keep the wave at full amplitude whenever there is
+// meaningful caffeine, flattening only near zero.
+private val CaffeineWaveAmplitude: (Float) -> Float = { progress ->
+    if (progress < 0.05f) 0f else 1f
+}
+
 @Composable
 fun CaffeineCircularView(
     currentMg: Double,
@@ -44,9 +55,18 @@ fun CaffeineCircularView(
     trend: CaffeineTrend,
     modifier: Modifier = Modifier,
 ) {
-    val progress = if (maxMg > 0.0) (currentMg / maxMg).toFloat().coerceIn(0f, 1f) else 0f
+    val targetProgress = if (maxMg > 0.0) (currentMg / maxMg).toFloat().coerceIn(0f, 1f) else 0f
+    val animatedProgress = animateFloatAsState(
+        targetValue = targetProgress,
+        animationSpec = tween(durationMillis = 600),
+        label = "circular_view_progress",
+    )
     val strokeWidthPx = with(LocalDensity.current) { 16.dp.toPx() }
-    val indicatorStroke = Stroke(width = strokeWidthPx)
+    // The indicator compares the progress lambda by reference and rebuilds its wave
+    // geometry cache when it changes — both must stay stable across the every-second
+    // recompositions driven by the live ticker.
+    val progressProvider = remember { { animatedProgress.value } }
+    val indicatorStroke = remember(strokeWidthPx) { Stroke(width = strokeWidthPx, cap = StrokeCap.Round) }
 
     BoxWithConstraints(
         modifier = modifier.fillMaxSize(),
@@ -60,13 +80,14 @@ fun CaffeineCircularView(
         ) {
             Box(contentAlignment = Alignment.Center) {
                 CircularWavyProgressIndicator(
-                    progress = { progress },
+                    progress = progressProvider,
                     modifier = Modifier.size(indicatorSize),
                     color = MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.surfaceVariant,
                     stroke = indicatorStroke,
                     trackStroke = indicatorStroke,
                     gapSize = 8.dp,
+                    amplitude = CaffeineWaveAmplitude,
                     wavelength = 60.dp,
                     waveSpeed = 60.dp,
                 )

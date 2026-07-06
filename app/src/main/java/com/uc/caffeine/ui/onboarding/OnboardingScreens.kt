@@ -83,7 +83,7 @@ internal fun IntroScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Image(
-                        painter = painterResource(id = R.mipmap.ic_launcher_foreground),
+                        painter = painterResource(id = R.drawable.app_logo_glyph),
                         contentDescription = null,
                         modifier = Modifier.size(36.dp),
                     )

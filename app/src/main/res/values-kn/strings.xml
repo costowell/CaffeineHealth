@@ -160,4 +160,21 @@
 
     <!-- Common -->
     <string name="brand_caffeine_health">Caffeine Health</string>
+
+    <!-- Caffeine Coach (HomeScreen card) -->
+    <string name="coach_title">ಕ್ಯಾಫೀನ್ ಕೋಚ್</string>
+    <string name="coach_headline_now">ಈಗ ಸುಮಾರು %1$dmg ತೆಗೆದುಕೊಳ್ಳಿ</string>
+    <string name="coach_headline_at">%2$s ಸುಮಾರಿಗೆ ಸುಮಾರು %1$dmg ತೆಗೆದುಕೊಳ್ಳಿ</string>
+    <string name="coach_reason_sleep_debt">ನೀವು %1$s ನಿದ್ರಿಸಿದ್ದೀರಿ — ಇಂದು ರಾತ್ರಿಯ ನಿದ್ರೆಗೆ ಹಾನಿ ಮಾಡದೆ ಚೇತರಿಸಿಕೊಳ್ಳಲು ಅತ್ಯಂತ ಚಿಕ್ಕ ಉಪಯುಕ್ತ ಪ್ರಮಾಣ.</string>
+    <string name="coach_reason_afternoon_dip">ನಿಮ್ಮ ನಿರೀಕ್ಷಿತ ಮಧ್ಯಾಹ್ನದ ಜಡತೆಗೆ ಹೊಂದಿಸಲಾಗಿದೆ — ಚುರುಕಾಗಿರಲು ಕನಿಷ್ಠ ಕ್ಯಾಫೀನ್.</string>
+    <string name="coach_reason_stay_sharp">ದಿನವಿಡೀ ನಿಮ್ಮ ಏಕಾಗ್ರತೆ ಮಟ್ಟಕ್ಕಿಂತ ಮೇಲಿರಲು ಅತ್ಯಂತ ಚಿಕ್ಕ ಪ್ರಮಾಣ.</string>
+    <string name="coach_residual_note">ನಿಮ್ಮ ಮಲಗುವ ಸಮಯ %2$s ವೇಳೆಗೆ ~%1$dmgಗೆ ಇಳಿಯುತ್ತದೆ.</string>
+    <string name="coach_hold_already_alert">ನೀವು ಸಿದ್ಧರಿದ್ದೀರಿ — ಚುರುಕಾಗಿರಲು ಈಗ ಕ್ಯಾಫೀನ್ ಅಗತ್ಯವಿಲ್ಲ.</string>
+    <string name="coach_hold_already_alert_debt">ನೀವು %1$s ನಿದ್ರೆಯಲ್ಲಿ ನಡೆಯುತ್ತಿದ್ದೀರಿ, ಆದರೆ ಈಗ ಸಾಕಷ್ಟು ಚುರುಕಾಗಿದ್ದೀರಿ — ಸ್ವಲ್ಪ ಕಾಯಿರಿ.</string>
+    <string name="coach_hold_bedtime">ಈಗ ಕ್ಯಾಫೀನ್ ಬೇಡ — ಇದು ನಿಮ್ಮ ಮಲಗುವ ಸಮಯ %1$sಗೆ ತುಂಬಾ ಹತ್ತಿರವಿದೆ, ನಿದ್ರೆಗೆ ಅಪಾಯವಿಲ್ಲದೆ ಸೇರಿಸಲಾಗದು.</string>
+    <string name="coach_connect_sleep">ನೀವು ನಿಜವಾಗಿ ಹೇಗೆ ನಿದ್ರಿಸಿದ್ದೀರಿ ಎಂಬುದಕ್ಕೆ ಸರಿಹೊಂದುವ ಶಿಫಾರಸಿಗಾಗಿ ನಿದ್ರಾ ಡೇಟಾವನ್ನು ಸಂಪರ್ಕಿಸಿ.</string>
+    <string name="coach_sleep_hours">%1$dh %2$dm</string>
+    <!-- Caffeine Coach settings -->
+    <string name="coach_setting_label">ಕ್ಯಾಫೀನ್ ಕೋಚ್</string>
+    <string name="coach_setting_description">ನಿದ್ರೆಗೆ ಹಾನಿ ಮಾಡದೆ ಚುರುಕಾಗಿರಲು ಅತ್ಯಂತ ಚಿಕ್ಕ, ಸೂಕ್ತ ಸಮಯದ ಪ್ರಮಾಣವನ್ನು ಸೂಚಿಸುತ್ತದೆ</string>
 </resources>

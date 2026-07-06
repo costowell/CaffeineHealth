@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.MutablePreferences
 import com.uc.caffeine.data.AhrGenotype
 import com.uc.caffeine.data.AppDateFormat
 import com.uc.caffeine.data.HealthConnectManager
+import com.uc.caffeine.data.LastNightSleep
 import com.uc.caffeine.data.CaffeineDatabase
 import com.uc.caffeine.data.Cyp1a2Genotype
 import com.uc.caffeine.data.HormonalStatus
@@ -27,14 +28,21 @@ import com.uc.caffeine.ui.onboarding.WeightUnit
 import com.uc.caffeine.R
 import com.uc.caffeine.data.model.ConsumptionEntry
 import com.uc.caffeine.data.model.DEFAULT_CONSUMPTION_DURATION_MINUTES
+import com.uc.caffeine.data.model.DismissedHealthConnectRecord
 import com.uc.caffeine.data.model.DrinkPreset
 import com.uc.caffeine.data.model.DrinkUnit
 import com.uc.caffeine.data.model.RecentDrink
 import com.uc.caffeine.util.CaffeineCalculator
+import com.uc.caffeine.util.CaffeineCoach
+import com.uc.caffeine.util.CoachInput
+import com.uc.caffeine.util.CoachRecommendation
 import com.uc.caffeine.util.AnalyticsRange
 import com.uc.caffeine.util.AnalyticsUiState
 import com.uc.caffeine.util.calculateNextBedtimeMillis
+import com.uc.caffeine.util.combineDateWithTime
 import com.uc.caffeine.util.calculateServingTotalCaffeine
+import com.uc.caffeine.util.MIN_SERVING_QUANTITY
+import com.uc.caffeine.data.DrinkCatalogSync
 import com.uc.caffeine.util.buildAnalyticsUiState
 import com.uc.caffeine.util.CategoryUtils
 import com.uc.caffeine.util.ChartData
@@ -49,6 +57,7 @@ import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProdu
 import com.patrykandpatrick.vico.compose.cartesian.data.columnSeries
 import com.patrykandpatrick.vico.compose.pie.data.PieChartModelProducer
 import com.patrykandpatrick.vico.compose.pie.data.pieSeries
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import kotlinx.coroutines.channels.Channel
@@ -60,6 +69,11 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 private const val HEALTH_CONNECT_IMPORT_WINDOW_MILLIS = 30L * 24 * 60 * 60 * 1000
+
+// Caffeine older than this is pharmacologically negligible; the coach ignores it,
+// which also keeps the optimiser's timeline sampling cheap.
+private const val COACH_ENTRY_WINDOW_MILLIS = 36L * 60 * 60 * 1000
+private const val MILLIS_PER_DAY = 24L * 60 * 60 * 1000
 
 sealed interface AddScreenUiEvent {
     data class DrinkLogged(val drinkName: String) : AddScreenUiEvent
@@ -84,6 +98,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
     private val presetDao = db.drinkPresetDao()
     private val unitDao   = db.drinkUnitDao()
     private val logDao    = db.consumptionLogDao()
+    private val dismissedHcDao = db.dismissedHcRecordDao()
     private val settingsRepo = SettingsRepository(application)
     val healthConnectManager = HealthConnectManager(application)
 
@@ -339,6 +354,67 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         initialValue = Pair(0.0, System.currentTimeMillis())
     )
 
+    // Last night's sleep from Health Connect, refreshed on app open and HC-sleep toggle.
+    // In-memory only (derived/cached) — drives the personalized coach recommendation.
+    private val _lastNightSleep = MutableStateFlow<LastNightSleep?>(null)
+
+    /**
+     * The Caffeine Coach's "minimum effective, optimally-timed" suggestion, or null when
+     * the feature is disabled. Personalized with Health Connect sleep data when available.
+     */
+    val coachRecommendation: StateFlow<CoachRecommendation?> = combine(
+        allConsumptionEntries,
+        userSettings,
+        chartTickerFlow,
+        _lastNightSleep,
+    ) { entries, settings, now, lastNight ->
+        if (!settings.caffeineCoachEnabled) return@combine null
+        CaffeineCoach.recommend(buildCoachInput(entries, settings, now, lastNight))
+    }.flowOn(Dispatchers.Default)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = null,
+        )
+
+    private fun buildCoachInput(
+        entries: List<ConsumptionEntry>,
+        settings: UserSettings,
+        nowMillis: Long,
+        lastNight: LastNightSleep?,
+    ): CoachInput {
+        val zoneId = settings.resolvedZoneId()
+        val recentEntries = entries.filter {
+            it.startedAtMillis >= nowMillis - COACH_ENTRY_WINDOW_MILLIS
+        }
+        return CoachInput(
+            nowMillis = nowMillis,
+            entries = recentEntries,
+            halfLifeMinutes = settings.effectiveHalfLifeMinutes,
+            absorptionRateMinutes = settings.absorptionRateMinutes,
+            sleepThresholdMg = settings.sleepThresholdMg,
+            bedtimeMillis = calculateNextBedtimeMillis(nowMillis, settings),
+            wakeMillis = lastNight?.wakeMillis ?: estimatedWakeMillis(nowMillis, settings, zoneId),
+            lastNightSleepMinutes = lastNight?.asleepMinutes,
+            zoneId = zoneId,
+        )
+    }
+
+    // Fallback wake time when no wearable sleep data: derive the wake-of-day from the
+    // typical bedtime + sleep need, then take the most recent past occurrence.
+    private fun estimatedWakeMillis(
+        nowMillis: Long,
+        settings: UserSettings,
+        zoneId: java.time.ZoneId,
+    ): Long {
+        val dayOfWeek = Instant.ofEpochMilli(nowMillis).atZone(zoneId).dayOfWeek
+        val bedtime = settings.effectiveSleepTimeFor(dayOfWeek)
+        val wakeMinuteOfDay =
+            (bedtime.hour * 60 + bedtime.minute + CaffeineCoach.DEFAULT_SLEEP_NEED_MINUTES) % (24 * 60)
+        val wake = combineDateWithTime(nowMillis, wakeMinuteOfDay / 60, wakeMinuteOfDay % 60, settings)
+        return if (wake > nowMillis) wake - MILLIS_PER_DAY else wake
+    }
+
     // Time until peak absorption - shows when caffeine is still being absorbed
     val timeUntilPeak: StateFlow<Long?> = combine(
         allConsumptionEntries,
@@ -455,6 +531,12 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         // LaunchedEffect, co-located with the axis/range setup, to avoid
         // desync between model data and chart configuration.
 
+        // One-time merge of newly-added catalog items/units (e.g. Moka, chocolate "g")
+        // into databases that were seeded before they existed. No-op for fresh installs.
+        viewModelScope.launch(Dispatchers.IO) {
+            DrinkCatalogSync.syncIfNeeded(getApplication(), presetDao, unitDao)
+        }
+
         viewModelScope.launch {
             analyticsUiState.collect { state ->
                 if (!state.hasData) return@collect
@@ -484,7 +566,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                 ?: fallbackUnitForPreset(preset)
             val entry = buildConsumptionEntry(
                 preset = preset,
-                quantity = 1,
+                quantity = 1.0,
                 unit = defaultUnit,
                 startedAtMillis = System.currentTimeMillis(),
                 durationMinutes = DEFAULT_CONSUMPTION_DURATION_MINUTES,
@@ -493,7 +575,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
             triggerWidgetRefresh()
             val settings = userSettings.value
             if (settings.healthConnectEnabled) {
-                val zoneId = java.time.ZoneId.of(settings.timeZoneId)
+                val zoneId = settings.resolvedZoneId()
                 runCatching { healthConnectManager.writeEntry(entry.copy(id = newId.toInt()), zoneId) }
             }
         }
@@ -501,7 +583,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
 
     fun logDrinkFromAddScreen(
         preset: DrinkPreset,
-        quantity: Int,
+        quantity: Double,
         unit: DrinkUnit,
         startedAtMillis: Long,
         durationMinutes: Int,
@@ -519,7 +601,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
             addScreenEventsChannel.send(AddScreenUiEvent.DrinkLogged(preset.name))
             val settings = userSettings.value
             if (settings.healthConnectEnabled) {
-                val zoneId = java.time.ZoneId.of(settings.timeZoneId)
+                val zoneId = settings.resolvedZoneId()
                 runCatching { healthConnectManager.writeEntry(entry.copy(id = newId.toInt()), zoneId) }
             }
         }
@@ -546,7 +628,31 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
             addScreenEventsChannel.send(AddScreenUiEvent.DrinkLogged(recent.drinkName))
             val settings = userSettings.value
             if (settings.healthConnectEnabled) {
-                val zoneId = java.time.ZoneId.of(settings.timeZoneId)
+                val zoneId = settings.resolvedZoneId()
+                runCatching { healthConnectManager.writeEntry(entry.copy(id = newId.toInt()), zoneId) }
+            }
+        }
+    }
+
+    /**
+     * One-tap log for the Caffeine Coach's suggested dose — a plain custom entry
+     * (no preset) using the app's default absorption profile, timestamped now.
+     */
+    fun logCoachDose(doseMg: Int, entryName: String) {
+        viewModelScope.launch {
+            val entry = ConsumptionEntry(
+                drinkName = entryName,
+                caffeineMg = doseMg,
+                emoji = "⚡",
+            )
+            val newId = logDao.logDrink(entry)
+            triggerWidgetRefresh()
+            homeScreenEventsChannel.send(
+                HomeScreenUiEvent.LogActionCompleted("Logged ${doseMg}mg from Coach")
+            )
+            val settings = userSettings.value
+            if (settings.healthConnectEnabled) {
+                val zoneId = settings.resolvedZoneId()
                 runCatching { healthConnectManager.writeEntry(entry.copy(id = newId.toInt()), zoneId) }
             }
         }
@@ -565,7 +671,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
 
     fun updateLoggedEntry(
         entry: ConsumptionEntry,
-        quantity: Int,
+        quantity: Double,
         unit: DrinkUnit,
         startedAtMillis: Long,
         durationMinutes: Int,
@@ -596,7 +702,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                     startedAtMillis = startedAtMillis,
                     durationMinutes = coercedDuration,
                 )
-                val zoneId = java.time.ZoneId.of(settings.timeZoneId)
+                val zoneId = settings.resolvedZoneId()
                 runCatching { healthConnectManager.writeEntry(updatedEntry, zoneId) }
             }
         }
@@ -616,7 +722,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
             )
             val settings = userSettings.value
             if (settings.healthConnectEnabled) {
-                val zoneId = java.time.ZoneId.of(settings.timeZoneId)
+                val zoneId = settings.resolvedZoneId()
                 runCatching { healthConnectManager.writeEntry(duplicate.copy(id = newId.toInt()), zoneId) }
             }
         }
@@ -630,6 +736,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
 
     fun deleteLoggedEntry(entry: ConsumptionEntry) {
         viewModelScope.launch {
+            tombstoneImportedRecords(listOf(entry))
             logDao.deleteEntryById(entry.id)
             triggerWidgetRefresh()
             homeScreenEventsChannel.send(
@@ -650,6 +757,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
                 zoneId = settings.resolvedZoneId()
             )
             val todayEntriesToDelete = logDao.getTodayEntriesOnce(startOfDay)
+            tombstoneImportedRecords(todayEntriesToDelete)
             logDao.clearToday(startOfDay)
             triggerWidgetRefresh()
             if (settings.healthConnectEnabled) {
@@ -791,7 +899,7 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
             settingsRepo.updateHealthConnectEnabled(enabled)
             if (enabled) {
                 val settings = userSettings.value
-                val zoneId = java.time.ZoneId.of(settings.timeZoneId)
+                val zoneId = settings.resolvedZoneId()
                 val entries = logDao.getAllEntriesOnce()
                 runCatching { healthConnectManager.syncAll(entries, zoneId) }
                 importForeignCaffeine()
@@ -802,7 +910,13 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
     fun updateHcSleepEnabled(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepo.updateHcSleepEnabled(enabled)
-            if (enabled) refreshHcSleepData()
+            if (enabled) refreshHcSleepData() else _lastNightSleep.value = null
+        }
+    }
+
+    fun updateCaffeineCoachEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepo.updateCaffeineCoachEnabled(enabled)
         }
     }
 
@@ -845,10 +959,20 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    // Marks deleted imported entries so the next import doesn't resurrect them
+    private suspend fun tombstoneImportedRecords(entries: List<ConsumptionEntry>) {
+        val recordIds = entries.mapNotNull { it.healthConnectRecordId }
+        if (recordIds.isEmpty()) return
+        val now = System.currentTimeMillis()
+        dismissedHcDao.insertAll(recordIds.map { DismissedHealthConnectRecord(it, now) })
+    }
+
     private suspend fun importForeignCaffeine() {
         if (!userSettings.value.healthConnectEnabled) return
-        val sinceMillis = System.currentTimeMillis() - HEALTH_CONNECT_IMPORT_WINDOW_MILLIS
-        val existingIds = logDao.getImportedHealthConnectRecordIds().toSet()
+        val now = System.currentTimeMillis()
+        val sinceMillis = now - HEALTH_CONNECT_IMPORT_WINDOW_MILLIS
+        dismissedHcDao.pruneOlderThan(now - 2 * HEALTH_CONNECT_IMPORT_WINDOW_MILLIS)
+        val existingIds = (logDao.getImportedHealthConnectRecordIds() + dismissedHcDao.getAllIds()).toSet()
         val imported = runCatching {
             healthConnectManager.readForeignCaffeineRecords(sinceMillis, existingIds)
         }.getOrDefault(emptyList())
@@ -873,7 +997,18 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
 
     private suspend fun refreshHcSleepData() {
         val settings = userSettings.value
-        val zoneId = java.time.ZoneId.of(settings.timeZoneId)
+        val zoneId = settings.resolvedZoneId()
+        // If the user revoked READ_SLEEP in Health Connect, drop the cached bedtime so the
+        // weekly rota / typical bedtime fallback takes over instead of a stale HC value.
+        if (runCatching { healthConnectManager.isSleepPermissionRevoked() }.getOrDefault(false)) {
+            settingsRepo.clearHcSleepTime()
+            _lastNightSleep.value = null
+            return
+        }
+        // Cache last night's full sleep (duration + wake) for the coach's sleep-debt math.
+        _lastNightSleep.value = runCatching {
+            healthConnectManager.readLastNightSleep(zoneId)
+        }.getOrNull()
         val bedtime = runCatching {
             healthConnectManager.readSleepBedtime(settings.hcSleepMode, zoneId)
         }.getOrNull() ?: return
@@ -1111,12 +1246,12 @@ class CaffeineViewModel(application: Application) : AndroidViewModel(application
 
     private fun buildConsumptionEntry(
         preset: DrinkPreset,
-        quantity: Int,
+        quantity: Double,
         unit: DrinkUnit,
         startedAtMillis: Long,
         durationMinutes: Int,
     ): ConsumptionEntry {
-        val safeQuantity = quantity.coerceAtLeast(1)
+        val safeQuantity = quantity.coerceAtLeast(MIN_SERVING_QUANTITY)
         return ConsumptionEntry(
             drinkName = preset.name,
             caffeineMg = calculateServingTotalCaffeine(safeQuantity, unit.caffeineMg),

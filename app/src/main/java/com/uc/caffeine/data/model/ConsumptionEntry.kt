@@ -27,7 +27,8 @@ data class ConsumptionEntry(
     val presetItemId: String = "",
 
     // The serving selection used for this logged entry.
-    val quantity: Int = 1,
+    // Double so fractional servings (e.g. 1.5 tsp, 30 g) are preserved.
+    val quantity: Double = 1.0,
     val unitKey: String = "",
     val unitCaffeineMg: Double = 0.0,
 

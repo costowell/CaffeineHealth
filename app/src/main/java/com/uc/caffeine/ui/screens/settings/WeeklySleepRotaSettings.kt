@@ -11,8 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Replay
+import androidx.compose.material.icons.rounded.CalendarMonth
+import androidx.compose.material.icons.rounded.Replay
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -98,7 +98,7 @@ internal fun WeeklySleepRotaSettingsScreen(
                     onRotaEnabledChange(!rotaEnabled)
                 },
                 leadingContent = {
-                    Icon(Icons.Filled.CalendarMonth, contentDescription = null)
+                    Icon(Icons.Rounded.CalendarMonth, contentDescription = null)
                 },
                 content = {
                     Text(text = stringResource(R.string.weekly_sleep_rota_enable_title))
@@ -166,7 +166,7 @@ internal fun WeeklySleepRotaSettingsScreen(
                                         },
                                     ) {
                                         Icon(
-                                            Icons.Filled.Replay,
+                                            Icons.Rounded.Replay,
                                             contentDescription = stringResource(
                                                 R.string.weekly_sleep_rota_clear_cd,
                                                 dayLabel,
@@ -243,7 +243,11 @@ private fun WeeklySleepRotaTimePickerDialog(
     )
 
     BasicAlertDialog(onDismissRequest = onDismiss) {
-        Surface(shape = AlertDialogDefaults.shape) {
+        Surface(
+            shape = AlertDialogDefaults.shape,
+            color = AlertDialogDefaults.containerColor,
+            tonalElevation = AlertDialogDefaults.TonalElevation,
+        ) {
             Column(
                 modifier = Modifier.padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,

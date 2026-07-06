@@ -460,4 +460,21 @@
     <string name="celebration_next_log">अगला: अपना पहला कप लॉग करें</string>
     <string name="celebration_next_log_supporting">होम स्क्रीन से एक टैप। उसके बाद curve अपने आप भरती है।</string>
     <string name="celebration_take_me_home">मुझे होम ले चलो</string>
+
+    <!-- Caffeine Coach (HomeScreen card) -->
+    <string name="coach_title">कैफीन कोच</string>
+    <string name="coach_headline_now">अभी लगभग %1$dmg लें</string>
+    <string name="coach_headline_at">%2$s के आसपास लगभग %1$dmg लें</string>
+    <string name="coach_reason_sleep_debt">आपने %1$s नींद ली — आज रात की नींद को नुकसान पहुँचाए बिना उबरने के लिए सबसे छोटी उपयोगी खुराक।</string>
+    <string name="coach_reason_afternoon_dip">आपकी अनुमानित दोपहर की सुस्ती के लिए समयबद्ध — सतर्क रहने के लिए न्यूनतम कैफीन।</string>
+    <string name="coach_reason_stay_sharp">पूरे दिन अपने फ़ोकस स्तर से ऊपर रहने के लिए सबसे छोटी खुराक।</string>
+    <string name="coach_residual_note">आपके सोने के समय %2$s तक घटकर ~%1$dmg रह जाएगी।</string>
+    <string name="coach_hold_already_alert">आप तैयार हैं — सतर्क रहने के लिए अभी कैफीन की ज़रूरत नहीं।</string>
+    <string name="coach_hold_already_alert_debt">आप %1$s नींद पर चल रहे हैं, पर अभी काफ़ी सतर्क हैं — फ़िलहाल रुकें।</string>
+    <string name="coach_hold_bedtime">अभी कैफीन न लें — यह आपके सोने के समय %1$s के बहुत करीब है, नींद के जोखिम के बिना और लेना ठीक नहीं।</string>
+    <string name="coach_connect_sleep">आपने वास्तव में कैसे सोया, उसके अनुरूप सिफ़ारिश के लिए नींद डेटा कनेक्ट करें।</string>
+    <string name="coach_sleep_hours">%1$dh %2$dm</string>
+    <!-- Caffeine Coach settings -->
+    <string name="coach_setting_label">कैफीन कोच</string>
+    <string name="coach_setting_description">नींद को नुकसान पहुँचाए बिना सतर्क रहने के लिए सबसे छोटी, सही समय पर खुराक सुझाता है</string>
 </resources>

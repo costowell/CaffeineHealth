@@ -7,39 +7,36 @@ import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BrightnessAuto
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.DonutLarge
-import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.rounded.BrightnessAuto
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.DarkMode
+import androidx.compose.material.icons.rounded.DonutLarge
+import androidx.compose.material.icons.rounded.LightMode
+import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedListItem
-import com.uc.caffeine.ui.components.segmentedListItemShapes
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -110,22 +107,22 @@ internal fun AppearanceSettingsScreen(
             Column(
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                SegmentedListItem(
-                    onClick = {},
-                    leadingContent = {
-                        Icon(
-                            imageVector = when (userSettings.themeMode) {
-                                ThemeMode.SYSTEM -> Icons.Default.BrightnessAuto
-                                ThemeMode.LIGHT -> Icons.Default.LightMode
-                                ThemeMode.DARK -> Icons.Default.DarkMode
-                            },
-                            contentDescription = null,
-                        )
-                    },
-                    content = {
+                ListItem(
+                    headlineContent = {
                         Text(
                             text = stringResource(R.string.appearance_theme_label),
                             style = MaterialTheme.typography.titleMedium,
+                        )
+                    },
+                    modifier = Modifier.clip(MaterialTheme.shapes.large),
+                    leadingContent = {
+                        Icon(
+                            imageVector = when (userSettings.themeMode) {
+                                ThemeMode.SYSTEM -> Icons.Rounded.BrightnessAuto
+                                ThemeMode.LIGHT -> Icons.Rounded.LightMode
+                                ThemeMode.DARK -> Icons.Rounded.DarkMode
+                            },
+                            contentDescription = null,
                         )
                     },
                     supportingContent = {
@@ -159,7 +156,6 @@ internal fun AppearanceSettingsScreen(
                             }
                         }
                     },
-                    shapes = segmentedListItemShapes(index = 0, count = 1),
                     colors = ListItemDefaults.colors(
                         containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
                     ),
@@ -169,29 +165,31 @@ internal fun AppearanceSettingsScreen(
             Column(
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                SegmentedListItem(
-                    onClick = {},
-                    leadingContent = {
-                        Icon(
-                            imageVector = Icons.Default.Palette,
-                            contentDescription = null,
-                        )
-                    },
-                    content = {
+                ListItem(
+                    headlineContent = {
                         Text(
                             text = stringResource(R.string.appearance_color_palette_label),
                             style = MaterialTheme.typography.titleMedium,
                         )
                     },
+                    modifier = Modifier.clip(MaterialTheme.shapes.large),
+                    leadingContent = {
+                        Icon(
+                            imageVector = Icons.Rounded.Palette,
+                            contentDescription = null,
+                        )
+                    },
                     supportingContent = {
-                        LazyRow(
+                        // Plain scrollable Row: ListItem measures slots with intrinsics,
+                        // which LazyRow (SubcomposeLayout) cannot provide.
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 8.dp),
+                                .horizontalScroll(rememberScrollState())
+                                .padding(top = 8.dp, bottom = 4.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            contentPadding = PaddingValues(vertical = 4.dp),
                         ) {
-                            items(AppColorPalette.entries) { palette ->
+                            AppColorPalette.entries.forEach { palette ->
                                 val previewScheme = remember(palette, isDark) {
                                     if (palette == AppColorPalette.DYNAMIC) {
                                         if (isDark) dynamicDarkColorScheme(context)
@@ -212,7 +210,6 @@ internal fun AppearanceSettingsScreen(
                             }
                         }
                     },
-                    shapes = segmentedListItemShapes(index = 0, count = 1),
                     colors = ListItemDefaults.colors(
                         containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
                     ),
@@ -222,18 +219,18 @@ internal fun AppearanceSettingsScreen(
             Column(
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                SegmentedListItem(
-                    onClick = {},
-                    leadingContent = {
-                        Icon(
-                            imageVector = Icons.Default.DonutLarge,
-                            contentDescription = null,
-                        )
-                    },
-                    content = {
+                ListItem(
+                    headlineContent = {
                         Text(
                             text = stringResource(R.string.appearance_home_view_label),
                             style = MaterialTheme.typography.titleMedium,
+                        )
+                    },
+                    modifier = Modifier.clip(MaterialTheme.shapes.large),
+                    leadingContent = {
+                        Icon(
+                            imageVector = Icons.Rounded.DonutLarge,
+                            contentDescription = null,
                         )
                     },
                     supportingContent = {
@@ -266,7 +263,6 @@ internal fun AppearanceSettingsScreen(
                             }
                         }
                     },
-                    shapes = segmentedListItemShapes(index = 0, count = 1),
                     colors = ListItemDefaults.colors(
                         containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
                     ),
@@ -315,7 +311,7 @@ private fun ColorPaletteItem(
                             contentAlignment = Alignment.Center,
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Check,
+                                imageVector = Icons.Rounded.Check,
                                 contentDescription = null,
                                 tint = Color.White,
                                 modifier = Modifier.size(28.dp),

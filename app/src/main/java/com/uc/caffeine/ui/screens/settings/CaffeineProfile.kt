@@ -18,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
@@ -31,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -171,6 +173,11 @@ internal fun CaffeineProfileSettingsScreen(
                 onClick = onWeeklySleepRotaClick,
             )
 
+            CaffeineCoachToggleCard(
+                enabled = userSettings.caffeineCoachEnabled,
+                onToggle = viewModel::updateCaffeineCoachEnabled,
+            )
+
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
@@ -201,6 +208,54 @@ internal fun CaffeineProfileSettingsScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun CaffeineCoachToggleCard(
+    enabled: Boolean,
+    onToggle: (Boolean) -> Unit,
+) {
+    val haptics = rememberAppHaptics()
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        onClick = {
+            haptics.toggle()
+            onToggle(!enabled)
+        },
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Bolt,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp),
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.coach_setting_label),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    text = stringResource(R.string.coach_setting_description),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Switch(
+                checked = enabled,
+                onCheckedChange = {
+                    haptics.toggle()
+                    onToggle(it)
+                },
+            )
         }
     }
 }
@@ -357,6 +412,8 @@ private fun ReAdjustHealthProfileCard(
                                 stringResource(R.string.health_connect_sleep_hint_active)
                             userSettings.hcSleepEnabled ->
                                 stringResource(R.string.health_connect_sleep_hint_no_data)
+                            userSettings.weeklySleepRotaEnabled ->
+                                stringResource(R.string.profile_sleep_time_rota_hint)
                             else -> null
                         },
                     )

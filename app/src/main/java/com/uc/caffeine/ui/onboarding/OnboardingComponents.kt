@@ -756,7 +756,7 @@ internal fun OnboardingBrandLockup(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Image(
-            painter = painterResource(id = R.mipmap.ic_launcher_foreground),
+            painter = painterResource(id = R.drawable.app_logo_glyph),
             contentDescription = stringResource(R.string.onboarding_brand_logo_cd),
             modifier = Modifier.size(mainIconSize),
         )

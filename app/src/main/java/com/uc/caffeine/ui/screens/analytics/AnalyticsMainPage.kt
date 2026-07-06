@@ -13,11 +13,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Bedtime
-import androidx.compose.material.icons.filled.PieChart
-import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.rounded.Bedtime
+import androidx.compose.material.icons.rounded.PieChart
+import androidx.compose.material.icons.rounded.Schedule
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItemDefaults
@@ -47,7 +47,6 @@ import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
@@ -140,19 +139,19 @@ private fun AnalyticsNavCard(
         AnalyticsNavItem(
             title = stringResource(R.string.analytics_caffeine_by_source),
             summary = stringResource(R.string.analytics_caffeine_by_source_summary),
-            icon = Icons.Filled.PieChart,
+            icon = Icons.Rounded.PieChart,
             onClick = onSourcesClick,
         ),
         AnalyticsNavItem(
             title = stringResource(R.string.analytics_bedtime_impact),
             summary = stringResource(R.string.analytics_bedtime_impact_summary),
-            icon = Icons.Filled.Bedtime,
+            icon = Icons.Rounded.Bedtime,
             onClick = onBedtimeClick,
         ),
         AnalyticsNavItem(
             title = stringResource(R.string.analytics_when_you_drink),
             summary = stringResource(R.string.analytics_when_you_drink_summary),
-            icon = Icons.Filled.Schedule,
+            icon = Icons.Rounded.Schedule,
             onClick = onTimeOfDayClick,
         ),
     )
@@ -195,10 +194,10 @@ private fun AnalyticsNavCard(
 private fun AnalyticsSummaryCard(uiState: AnalyticsUiState) {
     val contentColor = MaterialTheme.colorScheme.onTertiaryContainer
 
-    ElevatedCard(
+    Card(
         modifier = Modifier.fillMaxWidth(),
         shape = AnalyticsCardShape,
-        colors = CardDefaults.elevatedCardColors(
+        colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.tertiaryContainer,
         ),
     ) {
@@ -224,8 +223,7 @@ private fun AnalyticsSummaryCard(uiState: AnalyticsUiState) {
                     )
                     Text(
                         text = stringResource(R.string.analytics_value_mg, uiState.totalCaffeineMg),
-                        style = MaterialTheme.typography.displaySmall,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.displaySmallEmphasized,
                         color = contentColor,
                     )
                     Text(
@@ -293,7 +291,7 @@ private fun SummaryMetric(
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleMediumEmphasized,
             color = contentColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

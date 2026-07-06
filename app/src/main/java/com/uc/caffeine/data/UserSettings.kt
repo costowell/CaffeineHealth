@@ -170,6 +170,13 @@ data class UserSettings(
     val colorPalette: AppColorPalette = AppColorPalette.DYNAMIC,
     val weeklySleepRotaEnabled: Boolean = false,
     val weeklySleepRota: Map<DayOfWeek, LocalTime> = emptyMap(),
+
+    /**
+     * Whether the Caffeine Coach surfaces a "minimum effective, optimally-timed" dose
+     * suggestion on the home screen. Uses Health Connect sleep data when available for a
+     * personalized recommendation; otherwise falls back to the typical schedule.
+     */
+    val caffeineCoachEnabled: Boolean = true,
 ) {
     /**
      * Combined clearance factor from optional genetic and hormonal modifiers.

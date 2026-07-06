@@ -11,12 +11,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.FileUpload
+import androidx.compose.material.icons.rounded.FileDownload
+import androidx.compose.material.icons.rounded.FileUpload
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.LoadingIndicator
 import com.uc.caffeine.ui.components.segmentedListItemShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedListItem
@@ -198,7 +199,7 @@ private fun MyDataSettingsContent(
                     onClick = onExportClick,
                     enabled = !isWorking,
                     leadingContent = {
-                        Icon(imageVector = Icons.Default.FileUpload, contentDescription = null)
+                        Icon(imageVector = Icons.Rounded.FileUpload, contentDescription = null)
                     },
                     content = {
                         Text(
@@ -218,7 +219,7 @@ private fun MyDataSettingsContent(
                     onClick = onImportClick,
                     enabled = !isWorking,
                     leadingContent = {
-                        Icon(imageVector = Icons.Default.FileDownload, contentDescription = null)
+                        Icon(imageVector = Icons.Rounded.FileDownload, contentDescription = null)
                     },
                     content = {
                         Text(
@@ -233,6 +234,14 @@ private fun MyDataSettingsContent(
                     colors = ListItemDefaults.colors(
                         containerColor = CaffeineSurfaceDefaults.groupedListContainerColor,
                     ),
+                )
+            }
+
+            if (isWorking) {
+                LoadingIndicator(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(top = 8.dp),
                 )
             }
         }

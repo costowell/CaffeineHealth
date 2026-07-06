@@ -16,14 +16,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.DonutLarge
-import androidx.compose.material.icons.outlined.LocalCafe
+import androidx.compose.material.icons.rounded.DonutLarge
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.LocalCafe
 import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItemDefaults
@@ -47,7 +46,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.patrykandpatrick.vico.compose.common.Fill
@@ -95,9 +93,8 @@ internal fun AnalyticsBySourcePage(
         listOf(primary, secondary, tertiary, error, outline)
     }
     val sliceLabelTextComponent = rememberTextComponent(
-        style = MaterialTheme.typography.labelSmall.copy(
-            color = androidx.compose.ui.graphics.Color.White,
-            fontWeight = FontWeight.Bold,
+        style = MaterialTheme.typography.labelSmallEmphasized.copy(
+            color = MaterialTheme.colorScheme.onPrimary,
         ),
     )
     val percentFormatter = remember {
@@ -133,10 +130,10 @@ internal fun AnalyticsBySourcePage(
                     stringResource(uiState.selectedRange.labelRes)
                 }
 
-                ElevatedCard(
+                Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = AnalyticsCardShape,
-                    colors = CardDefaults.elevatedCardColors(
+                    colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                     ),
                 ) {
@@ -147,10 +144,10 @@ internal fun AnalyticsBySourcePage(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        // Range selector — less-rounded chip (12dp vs card's 28dp)
+                        // Range selector — less-rounded chip (medium vs card's extraLarge)
                         Surface(
                             onClick = { showRangeSheet = true },
-                            shape = RoundedCornerShape(12.dp),
+                            shape = MaterialTheme.shapes.medium,
                             color = MaterialTheme.colorScheme.surfaceContainerHigh,
                             tonalElevation = 0.dp,
                         ) {
@@ -161,8 +158,7 @@ internal fun AnalyticsBySourcePage(
                             ) {
                                 Text(
                                     text = rangeLabel,
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.Medium,
+                                    style = MaterialTheme.typography.labelLargeEmphasized,
                                 )
                                 Icon(
                                     imageVector = Icons.Rounded.KeyboardArrowDown,
@@ -193,7 +189,7 @@ internal fun AnalyticsBySourcePage(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                                     ) {
-                                        Icon(Icons.Outlined.DonutLarge, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Icon(Icons.Rounded.DonutLarge, contentDescription = null, modifier = Modifier.size(16.dp))
                                         Text(stringResource(R.string.analytics_view_category), style = MaterialTheme.typography.labelMedium)
                                     }
                                 }
@@ -211,7 +207,7 @@ internal fun AnalyticsBySourcePage(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                                     ) {
-                                        Icon(Icons.Outlined.LocalCafe, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Icon(Icons.Rounded.LocalCafe, contentDescription = null, modifier = Modifier.size(16.dp))
                                         Text(stringResource(R.string.analytics_view_item), style = MaterialTheme.typography.labelMedium)
                                     }
                                 }
@@ -226,10 +222,10 @@ internal fun AnalyticsBySourcePage(
                 when (selectedView) {
                     SourceView.CATEGORY -> {
                         item {
-                            ElevatedCard(
+                            Card(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = AnalyticsCardShape,
-                                colors = CardDefaults.elevatedCardColors(
+                                colors = CardDefaults.cardColors(
                                     containerColor = CaffeineSurfaceDefaults.chartContainerColor,
                                 ),
                             ) {
@@ -269,10 +265,10 @@ internal fun AnalyticsBySourcePage(
                         }
 
                         item {
-                            ElevatedCard(
+                            Card(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = AnalyticsCardShape,
-                                colors = CardDefaults.elevatedCardColors(
+                                colors = CardDefaults.cardColors(
                                     containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                                 ),
                             ) {
@@ -369,9 +365,8 @@ private fun SingleCategoryPieFallback(
         ) {
             Text(
                 text = stringResource(R.string.analytics_full_percent),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
+                style = MaterialTheme.typography.headlineSmallEmphasized,
+                color = MaterialTheme.colorScheme.onPrimary,
             )
         }
     }
@@ -419,10 +414,10 @@ private fun DrinkCollage(items: List<SourceItemEntry>) {
         }
     }
 
-    ElevatedCard(
+    Card(
         modifier = Modifier.fillMaxWidth(),
         shape = AnalyticsCardShape,
-        colors = CardDefaults.elevatedCardColors(
+        colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         ),
     ) {
@@ -430,7 +425,7 @@ private fun DrinkCollage(items: List<SourceItemEntry>) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(312.dp)
-                .clip(RoundedCornerShape(28.dp))
+                .clip(MaterialTheme.shapes.extraLarge)
                 .background(MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.4f))
                 .clearAndSetSemantics {},
         ) {
@@ -563,10 +558,8 @@ private fun SourceItemList(items: List<SourceItemEntry>) {
                     trailingContent = {
                         Text(
                             text = stringResource(R.string.analytics_value_mg, item.totalCaffeineMg),
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
-                            ),
+                            style = MaterialTheme.typography.titleMediumEmphasized,
+                            color = MaterialTheme.colorScheme.primary,
                         )
                     },
                     shapes = ListItemDefaults.segmentedShapes(

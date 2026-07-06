@@ -180,4 +180,21 @@
 
     <!-- Common labels -->
     <string name="brand_caffeine_health">Caffeine Health</string>
+
+    <!-- Caffeine Coach (HomeScreen card) -->
+    <string name="coach_title">Entrenador de cafeína</string>
+    <string name="coach_headline_now">Toma unos %1$dmg ahora</string>
+    <string name="coach_headline_at">Toma unos %1$dmg hacia las %2$s</string>
+    <string name="coach_reason_sleep_debt">Dormiste %1$s: la dosis útil más pequeña para recuperarte sin perjudicar el sueño de esta noche.</string>
+    <string name="coach_reason_afternoon_dip">Programado para tu bajón de la tarde previsto: la mínima cafeína para seguir despierto.</string>
+    <string name="coach_reason_stay_sharp">La dosis más pequeña para mantenerte por encima de tu nivel de concentración durante el día.</string>
+    <string name="coach_residual_note">Baja a ~%1$dmg para tu hora de dormir, las %2$s.</string>
+    <string name="coach_hold_already_alert">Estás bien: no necesitas cafeína ahora para mantenerte despierto.</string>
+    <string name="coach_hold_already_alert_debt">Funcionas con %1$s de sueño, pero ahora estás bastante despierto: espera por ahora.</string>
+    <string name="coach_hold_bedtime">Evita la cafeína ahora: está demasiado cerca de tu hora de dormir, las %1$s, para añadir sin arriesgar el sueño.</string>
+    <string name="coach_connect_sleep">Conecta los datos de sueño para una recomendación ajustada a cómo dormiste realmente.</string>
+    <string name="coach_sleep_hours">%1$dh %2$dm</string>
+    <!-- Caffeine Coach settings -->
+    <string name="coach_setting_label">Entrenador de cafeína</string>
+    <string name="coach_setting_description">Sugiere la dosis más pequeña y mejor programada para mantenerte despierto sin perjudicar el sueño</string>
 </resources>

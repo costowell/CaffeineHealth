@@ -10,10 +10,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.NotificationsActive
-import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.NotificationsActive
+import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -96,7 +96,7 @@ internal fun NotificationsSettingsScreen(
                         onInactivityReminderToggle(!userSettings.inactivityReminderEnabled)
                     },
                     leadingContent = {
-                        Icon(Icons.Default.NotificationsActive, contentDescription = null)
+                        Icon(Icons.Rounded.NotificationsActive, contentDescription = null)
                     },
                     content = {
                         Text(text = stringResource(R.string.notifications_no_log_title))
@@ -132,7 +132,7 @@ internal fun NotificationsSettingsScreen(
                     SegmentedListItem(
                         onClick = {},
                         leadingContent = {
-                            Icon(Icons.Default.Schedule, contentDescription = null)
+                            Icon(Icons.Rounded.Schedule, contentDescription = null)
                         },
                         content = {
                             Text(text = formatReminderTime(timeStr, userSettings.use24HourClock))
@@ -144,7 +144,7 @@ internal fun NotificationsSettingsScreen(
                                     onDailyReminderTimesChange(userSettings.dailyReminderTimes - timeStr)
                                 },
                             ) {
-                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.notifications_remove_reminder_cd))
+                                Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.notifications_remove_reminder_cd))
                             }
                         },
                         shapes = segmentedListItemShapes(index, totalItems),
@@ -160,7 +160,7 @@ internal fun NotificationsSettingsScreen(
                         showTimePicker = true
                     },
                     leadingContent = {
-                        Icon(Icons.Default.Add, contentDescription = null)
+                        Icon(Icons.Rounded.Add, contentDescription = null)
                     },
                     content = {
                         Text(text = stringResource(R.string.notifications_add_reminder))
@@ -176,7 +176,11 @@ internal fun NotificationsSettingsScreen(
 
     if (showTimePicker) {
         BasicAlertDialog(onDismissRequest = { showTimePicker = false }) {
-            Surface(shape = AlertDialogDefaults.shape) {
+            Surface(
+                shape = AlertDialogDefaults.shape,
+                color = AlertDialogDefaults.containerColor,
+                tonalElevation = AlertDialogDefaults.TonalElevation,
+            ) {
                 Column(
                     modifier = Modifier.padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,

@@ -135,7 +135,7 @@ private fun CombinedContent(data: WidgetData, bedtimeLabel: String) {
             ) {
                 Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
                     Image(
-                        provider = ImageProvider(R.mipmap.ic_launcher_foreground),
+                        provider = ImageProvider(R.drawable.app_logo_glyph),
                         contentDescription = null,
                         modifier = GlanceModifier.size(28.dp),
                     )

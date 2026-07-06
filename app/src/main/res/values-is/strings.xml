@@ -160,4 +160,21 @@
 
     <!-- Common -->
     <string name="brand_caffeine_health">Caffeine Health</string>
+
+    <!-- Caffeine Coach (HomeScreen card) -->
+    <string name="coach_title">Koffínþjálfari</string>
+    <string name="coach_headline_now">Fáðu þér um %1$dmg núna</string>
+    <string name="coach_headline_at">Fáðu þér um %1$dmg um %2$s</string>
+    <string name="coach_reason_sleep_debt">Þú svafst %1$s — minnsti gagnlegi skammturinn til að ná þér án þess að skaða svefninn í nótt.</string>
+    <string name="coach_reason_afternoon_dip">Tímasett fyrir væntanlega síðdegislægð — minnsta koffín til að halda þér skörpum.</string>
+    <string name="coach_reason_stay_sharp">Minnsti skammturinn til að halda þér yfir einbeitingarstigi þínu allan daginn.</string>
+    <string name="coach_residual_note">Lækkar í ~%1$dmg fyrir háttatíma þinn kl. %2$s.</string>
+    <string name="coach_hold_already_alert">Allt í lagi — ekkert koffín þarf núna til að halda þér skörpum.</string>
+    <string name="coach_hold_already_alert_debt">Þú gengur á %1$s svefni, en þú ert nógu vakandi núna — bíddu aðeins.</string>
+    <string name="coach_hold_bedtime">Slepptu koffíni núna — það er of nálægt háttatíma þínum kl. %1$s til að bæta við án þess að hætta svefninum.</string>
+    <string name="coach_connect_sleep">Tengdu svefngögn til að fá ráðleggingu sniðna að því hvernig þú svafst í raun.</string>
+    <string name="coach_sleep_hours">%1$dh %2$dm</string>
+    <!-- Caffeine Coach settings -->
+    <string name="coach_setting_label">Koffínþjálfari</string>
+    <string name="coach_setting_description">Stingur upp á minnsta, best tímasetta skammtinum til að halda þér skörpum án þess að skaða svefn</string>
 </resources>

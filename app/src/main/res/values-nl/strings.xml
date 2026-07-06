@@ -160,4 +160,21 @@
 
     <!-- Common -->
     <string name="brand_caffeine_health">Caffeine Health</string>
+
+    <!-- Caffeine Coach (HomeScreen card) -->
+    <string name="coach_title">Cafeïnecoach</string>
+    <string name="coach_headline_now">Neem nu ongeveer %1$dmg</string>
+    <string name="coach_headline_at">Neem rond %2$s ongeveer %1$dmg</string>
+    <string name="coach_reason_sleep_debt">Je sliep %1$s — de kleinste nuttige dosis om te herstellen zonder je slaap vannacht te schaden.</string>
+    <string name="coach_reason_afternoon_dip">Afgestemd op je verwachte middagdip — de minste cafeïne om scherp te blijven.</string>
+    <string name="coach_reason_stay_sharp">De kleinste dosis om de hele dag boven je concentratieniveau te blijven.</string>
+    <string name="coach_residual_note">Daalt tot ~%1$dmg tegen je bedtijd om %2$s.</string>
+    <string name="coach_hold_already_alert">Helemaal goed — nu geen cafeïne nodig om scherp te blijven.</string>
+    <string name="coach_hold_already_alert_debt">Je draait op %1$s slaap, maar je bent nu alert genoeg — wacht nog even.</string>
+    <string name="coach_hold_bedtime">Sla cafeïne nu over — het is te dicht bij je bedtijd om %1$s om er nog aan toe te voegen zonder je slaap te riskeren.</string>
+    <string name="coach_connect_sleep">Verbind slaapgegevens voor een aanbeveling afgestemd op hoe je echt sliep.</string>
+    <string name="coach_sleep_hours">%1$dh %2$dm</string>
+    <!-- Caffeine Coach settings -->
+    <string name="coach_setting_label">Cafeïnecoach</string>
+    <string name="coach_setting_description">Stelt de kleinste, best getimede dosis voor om scherp te blijven zonder je slaap te schaden</string>
 </resources>

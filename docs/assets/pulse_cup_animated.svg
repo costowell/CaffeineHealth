@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="220" height="220" role="img" aria-label="Caffeine Health logo — a coffee cup with a beating heartbeat line">
+  <!--
+    Animated "Pulse Cup" mark for the GitHub README. GitHub strips inline HTML
+    animation, but CSS keyframes INSIDE an .svg file play fine when the file is
+    embedded via <img>. The heartbeat sweeps like an ECG monitor: traces in,
+    holds, then exits to the right and loops.
+  -->
+  <style>
+    .pulse {
+      stroke-dasharray: 100;
+      stroke-dashoffset: 100;
+      animation: sweep 3.6s cubic-bezier(0.4, 0, 0.2, 1) 0.5s infinite;
+    }
+    @keyframes sweep {
+      0%   { stroke-dashoffset: 100; }
+      30%  { stroke-dashoffset: 0; }
+      62%  { stroke-dashoffset: 0; }
+      90%  { stroke-dashoffset: -100; }
+      100% { stroke-dashoffset: -100; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .pulse { animation: none; stroke-dashoffset: 0; }
+    }
+  </style>
+  <circle cx="54" cy="54" r="53.5" fill="#FDFDFD"/>
+  <circle cx="54" cy="54" r="53" fill="none" stroke="#E4D9CE" stroke-width="1"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round"
+     transform="translate(54,54) scale(1.45) translate(-54,-54)">
+    <path d="M37.5,42 L40.5,68 C41,71.5 43.5,73.5 47,73.5 L61,73.5 C64.5,73.5 67,71.5 67.5,68 L70.5,42 Z"
+          stroke="#A99C8C" stroke-width="6.5"/>
+    <path d="M69.9,47.5 L72.5,47.5 C77.5,47.5 80,50.5 80,54 C80,57.5 77.5,60.5 72.5,60.5 L68.4,60.5"
+          stroke="#A99C8C" stroke-width="6.5"/>
+    <path class="pulse" pathLength="100"
+          d="M43,57 L50,57 L53,49.5 L56.3,65 L59.5,57 L65,57"
+          stroke="#E6C8A3" stroke-width="5.5"/>
+  </g>
+</svg>

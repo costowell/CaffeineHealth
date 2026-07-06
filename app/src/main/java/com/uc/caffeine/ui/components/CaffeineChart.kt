@@ -108,7 +108,6 @@ import com.uc.caffeine.util.ConsumptionContributionDetail
 import com.uc.caffeine.util.chartTimeFormatter
 import com.uc.caffeine.util.resolvedZoneId
 import java.time.Instant
-import java.time.LocalTime
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -1061,8 +1060,7 @@ private fun rememberDailyBedtimeDecorations(
         minX,
         maxX,
         zoneId,
-        userSettings.sleepTimeHour,
-        userSettings.sleepTimeMinute,
+        userSettings,
     ) {
         val bufferedStartMillis = ChartDataGenerator.domainXToTimestamp(
             domainStartMillis = domainStartMillis,
@@ -1074,11 +1072,11 @@ private fun rememberDailyBedtimeDecorations(
         )
         val startDate = Instant.ofEpochMilli(bufferedStartMillis).atZone(zoneId).toLocalDate().minusDays(1)
         val endDate = Instant.ofEpochMilli(bufferedEndMillis).atZone(zoneId).toLocalDate().plusDays(1)
-        val bedtimeTime = LocalTime.of(userSettings.sleepTimeHour, userSettings.sleepTimeMinute)
 
         buildList {
             var date = startDate
             while (!date.isAfter(endDate)) {
+                val bedtimeTime = userSettings.effectiveSleepTimeFor(date.dayOfWeek)
                 val bedtimeMillis = ZonedDateTime.of(date, bedtimeTime, zoneId)
                     .withSecond(0)
                     .withNano(0)

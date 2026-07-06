@@ -21,8 +21,8 @@ import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
@@ -41,7 +41,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.uc.caffeine.R
@@ -112,10 +111,10 @@ private fun BedtimeCalendarCard(
         }
     }
 
-    ElevatedCard(
+    Card(
         modifier = Modifier.fillMaxWidth(),
         shape = AnalyticsCardShape,
-        colors = CardDefaults.elevatedCardColors(
+        colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ),
     ) {
@@ -141,8 +140,7 @@ private fun BedtimeCalendarCard(
                 }
                 Text(
                     text = displayMonth.format(monthYearFormatter),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.titleLargeEmphasized,
                 )
                 FilledTonalIconButton(
                     onClick = onNextMonth,
@@ -282,10 +280,10 @@ private fun BedtimeStreakCard(
     )
     val hasStreak = currentStreak > 0
 
-    ElevatedCard(
+    Card(
         modifier = Modifier.fillMaxWidth(),
         shape = AnalyticsCardShape,
-        colors = CardDefaults.elevatedCardColors(
+        colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ),
     ) {
@@ -330,8 +328,7 @@ private fun BedtimeStreakCard(
                     } else {
                         stringResource(R.string.analytics_streak_zero_label)
                     },
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleLargeEmphasized,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(

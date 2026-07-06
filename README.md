@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp" width="100" alt="Caffeine Health logo" />
+  <img src="docs/assets/pulse_cup_animated.svg" width="110" alt="Caffeine Health logo — a coffee cup with a beating heartbeat line" />
 </p>
 
 <h1 align="center">Caffeine Health</h1>
@@ -205,6 +205,8 @@ Caffeine Health is built with **Material 3 Expressive** principles:
 - **Montserrat typography:** clean, modern font family throughout the entire app
 - **Haptic feedback:** tactile responses on key interactions across dashboard, catalog, and settings
 - **Dark mode:** full dark theme support with carefully tuned surface/container colors
+- **Animated splash screen:** the Pulse Cup heartbeat traces itself in on cold start, then dissolves into the app — matching light or dark from the first frame
+- **Themed icon:** dedicated monochrome launcher layer, so Android 13+ Material You tints the icon to your wallpaper
 
 ---
 

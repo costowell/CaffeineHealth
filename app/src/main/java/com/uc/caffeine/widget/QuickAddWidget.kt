@@ -41,6 +41,7 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import com.uc.caffeine.MainActivity
+import com.uc.caffeine.util.formatQuantity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -154,7 +155,7 @@ internal fun DrinkRow(drink: WidgetDrink) {
                     maxLines = 1,
                 )
                 Text(
-                    text = "${drink.info.quantity} ${drink.info.unitKey}, ${drink.info.caffeineMg} mg",
+                    text = "${formatQuantity(drink.info.quantity)} ${drink.info.unitKey}, ${drink.info.caffeineMg} mg",
                     style = TextStyle(
                         color = GlanceTheme.colors.onSurfaceVariant,
                         fontSize = 11.sp,

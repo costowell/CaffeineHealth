@@ -122,6 +122,7 @@
     <string name="weekly_sleep_rota_disabled_hint">Turn on the weekly rota to give individual days their own bedtime.</string>
     <string name="weekly_sleep_rota_pick_title">Bedtime for %1$s</string>
     <string name="weekly_sleep_rota_nav_on">On — each day uses its own bedtime</string>
+    <string name="profile_sleep_time_rota_hint">Weekly sleep rota is on — days with a custom bedtime override this time.</string>
 
     <!-- Advanced metabolism card -->
     <string name="profile_advanced_metabolism">Advanced Metabolism</string>
@@ -205,6 +206,28 @@
     <string name="sleep_forecast_safe">Safe to sleep at %1$s</string>
     <string name="sleep_forecast_may_affect">May affect sleep (%1$dmg at bedtime)</string>
     <string name="sleep_forecast_disruption">Sleep disruption likely (%1$dmg)</string>
+
+    <!-- Caffeine Coach (Home chip + detail sheet) -->
+    <string name="coach_title">Caffeine Coach</string>
+    <string name="coach_headline_now">Have about %1$dmg now</string>
+    <string name="coach_headline_at">Have about %1$dmg around %2$s</string>
+    <string name="coach_reason_sleep_debt">You slept %1$s — the smallest useful dose to help you recover without hurting tonight\'s sleep.</string>
+    <string name="coach_reason_afternoon_dip">Timed for your predicted afternoon dip — the least caffeine to stay sharp through it.</string>
+    <string name="coach_reason_stay_sharp">The smallest dose to stay above your focus level through the day.</string>
+    <string name="coach_residual_note">Clears to ~%1$dmg by your %2$s bedtime.</string>
+    <string name="coach_hold_already_alert">You\'re set — no caffeine needed right now to stay sharp.</string>
+    <string name="coach_hold_already_alert_debt">Running on %1$s of sleep, but you\'re alert enough right now — hold off for now.</string>
+    <string name="coach_hold_bedtime">Skip caffeine now — it\'s too close to your %1$s bedtime to add any without risking sleep.</string>
+    <string name="coach_connect_sleep">Connect sleep data for a recommendation tuned to how you actually slept.</string>
+    <string name="coach_sleep_hours">%1$dh %2$dm</string>
+    <string name="coach_chip_recommend_now">Coach · ~%1$dmg now</string>
+    <string name="coach_chip_recommend_at">Coach · ~%1$dmg around %2$s</string>
+    <string name="coach_chip_hold_alert">Coach · you\'re set — no caffeine needed</string>
+    <string name="coach_chip_hold_bedtime">Coach · winding down for your %1$s bedtime</string>
+    <string name="coach_log_dose">Log this dose</string>
+    <!-- Caffeine Coach settings -->
+    <string name="coach_setting_label">Caffeine Coach</string>
+    <string name="coach_setting_description">Suggest the smallest, best-timed dose to stay sharp without hurting sleep</string>
 
     <!-- Add screen -->
     <string name="add_title">Add a drink</string>
@@ -480,23 +503,20 @@
 
     <!-- What's New changelog sheet -->
     <string name="whats_new_title">What\'s New</string>
-    <string name="whats_new_version_badge">v2.2</string>
+    <string name="whats_new_version_badge">v2.3</string>
     <string name="whats_new_got_it">Got it</string>
-    <string name="whats_new_circular_title">Circular View</string>
-    <string name="whats_new_circular_body">A new radial display shows your current caffeine level at a glance, right from the home screen.</string>
-    <string name="whats_new_chart_title">Redesigned Chart</string>
-    <string name="whats_new_chart_body">The caffeine curve now shows drink images, richer detail on tap, and smoother chart interactions.</string>
+    <string name="whats_new_coach_title">Meet Caffeine Coach</string>
+    <string name="whats_new_coach_body">A quiet line under your home chart suggests the smallest, best-timed dose to stay sharp — without ever risking tonight\'s sleep. Tap it for the full reasoning and one-tap logging.</string>
+    <string name="whats_new_amounts_title">Log Exact Amounts</string>
+    <string name="whats_new_amounts_body">Tap the serving number to type a precise, fractional amount — half a soda, a short espresso, or an exact figure.</string>
+    <string name="whats_new_design_title">A Fresh New Look</string>
+    <string name="whats_new_design_body">A new Pulse Cup app icon with Material You themed-icon support, and an animated splash screen that greets you with a heartbeat.</string>
+    <string name="whats_new_sleep_title">Weekly Sleep Rota</string>
+    <string name="whats_new_sleep_body">Set a different bedtime for each day of the week, and your caffeine cut-off and bedtime estimates follow your real schedule.</string>
     <!-- Circular home view trend indicator -->
     <string name="home_trend_rising">Rising</string>
     <string name="home_trend_steady">Steady</string>
     <string name="home_trend_falling">Falling</string>
-
-    <string name="whats_new_analytics_title">Redesigned Analytics</string>
-    <string name="whats_new_analytics_body">Bedtime Impact now shows a full monthly calendar with streaks. When You Drink has cleaner bar charts with time-range filtering.</string>
-    <string name="whats_new_languages_title">14 New Languages</string>
-    <string name="whats_new_languages_body">Danish, Dutch, Finnish, French, German, Icelandic, Kannada, Malayalam, Norwegian, Portuguese, Spanish, Swedish, Tamil, and Telugu are now supported.</string>
-    <string name="whats_new_fixes_title">Fixes and Polish</string>
-    <string name="whats_new_fixes_body">Health Connect sync is more reliable, with a handful of smaller refinements across the app.</string>
 
     <!-- Completion celebration -->
     <string name="celebration_profile_saved">Profile saved.</string>

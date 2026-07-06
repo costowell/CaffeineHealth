@@ -5,6 +5,23 @@
         <item name="android:windowBackground">@color/window_background</item>
     </style>
 
+    <!--
+        Android 12+ splash screen (via androidx.core:core-splashscreen). The launcher
+        activity boots into this theme; installSplashScreen() then swaps to
+        postSplashScreenTheme on the first frame. Branded "icon-in-circle" splash:
+        a white circle holding the taupe + sand Pulse Cup on the app's surface color,
+        with the heartbeat line tracing itself in (animated-vector trimPathEnd).
+        Colours are resource refs with a -night variant so the splash matches the
+        system light/dark mode at cold start.
+    -->
+    <style name="Theme.Caffeine.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_logo_animated</item>
+        <item name="windowSplashScreenAnimationDuration">1000</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/splash_icon_circle</item>
+        <item name="postSplashScreenTheme">@style/Theme.Caffeine</item>
+    </style>
+
     <style name="Glance.AppWidget.List" parent="">
         <item name="android:scrollbars">none</item>
         <item name="android:fadeScrollbars">true</item>

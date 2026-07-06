@@ -160,4 +160,21 @@
 
     <!-- Common -->
     <string name="brand_caffeine_health">Caffeine Health</string>
+
+    <!-- Caffeine Coach (HomeScreen card) -->
+    <string name="coach_title">കഫെയ്ൻ കോച്ച്</string>
+    <string name="coach_headline_now">ഇപ്പോൾ ഏകദേശം %1$dmg കഴിക്കൂ</string>
+    <string name="coach_headline_at">%2$s-നോടടുത്ത് ഏകദേശം %1$dmg കഴിക്കൂ</string>
+    <string name="coach_reason_sleep_debt">നിങ്ങൾ %1$s ഉറങ്ങി — ഇന്നുരാത്രിയിലെ ഉറക്കത്തെ ബാധിക്കാതെ വീണ്ടെടുക്കാനുള്ള ഏറ്റവും ചെറിയ ഉപയോഗപ്രദമായ അളവ്.</string>
+    <string name="coach_reason_afternoon_dip">നിങ്ങളുടെ പ്രതീക്ഷിത ഉച്ചയ്ക്കു ശേഷമുള്ള ക്ഷീണത്തിന് അനുയോജ്യം — ജാഗ്രതയോടെ തുടരാൻ ഏറ്റവും കുറഞ്ഞ കഫെയ്ൻ.</string>
+    <string name="coach_reason_stay_sharp">ദിവസം മുഴുവൻ നിങ്ങളുടെ ശ്രദ്ധാനിലയ്ക്കു മുകളിൽ തുടരാനുള്ള ഏറ്റവും ചെറിയ അളവ്.</string>
+    <string name="coach_residual_note">നിങ്ങളുടെ ഉറക്കസമയം %2$s ആകുമ്പോഴേക്കും ~%1$dmg ആയി കുറയും.</string>
+    <string name="coach_hold_already_alert">നിങ്ങൾ തയ്യാറാണ് — ജാഗ്രതയോടെ തുടരാൻ ഇപ്പോൾ കഫെയ്ൻ ആവശ്യമില്ല.</string>
+    <string name="coach_hold_already_alert_debt">നിങ്ങൾ %1$s ഉറക്കത്തിൽ പ്രവർത്തിക്കുന്നു, പക്ഷേ ഇപ്പോൾ വേണ്ടത്ര ജാഗ്രതയുണ്ട് — കുറച്ച് കാത്തിരിക്കൂ.</string>
+    <string name="coach_hold_bedtime">ഇപ്പോൾ കഫെയ്ൻ വേണ്ട — ഇത് നിങ്ങളുടെ ഉറക്കസമയം %1$s-നോട് വളരെ അടുത്താണ്, ഉറക്കം അപകടത്തിലാക്കാതെ ചേർക്കാനാവില്ല.</string>
+    <string name="coach_connect_sleep">നിങ്ങൾ യഥാർത്ഥത്തിൽ എങ്ങനെ ഉറങ്ങി എന്നതിന് അനുയോജ്യമായ ശുപാർശയ്ക്കായി ഉറക്ക ഡാറ്റ കണക്റ്റ് ചെയ്യൂ.</string>
+    <string name="coach_sleep_hours">%1$dh %2$dm</string>
+    <!-- Caffeine Coach settings -->
+    <string name="coach_setting_label">കഫെയ്ൻ കോച്ച്</string>
+    <string name="coach_setting_description">ഉറക്കത്തെ ബാധിക്കാതെ ജാഗ്രതയോടെ തുടരാൻ ഏറ്റവും ചെറിയ, മികച്ച സമയത്തെ അളവ് നിർദ്ദേശിക്കുന്നു</string>
 </resources>

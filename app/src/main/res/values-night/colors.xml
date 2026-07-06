@@ -2,6 +2,11 @@
 <resources>
     <!-- Activity window background, dark variant. Matches CaffeineBackgroundDark. -->
     <color name="window_background">#17120F</color>
+    <!-- Splash screen (dark). Background matches the dark window_background; the white
+         icon circle is shared with the light variant, holding the taupe + sand Pulse Cup
+         on a white disc exactly like the launcher icon. -->
+    <color name="splash_background">#17120F</color>
+    <color name="splash_icon_circle">#FFFFFF</color>
     <!-- Widget colors (dark / night) -->
     <color name="widget_surface">#2F2824</color>
     <color name="widget_on_surface">#EDE0D8</color>

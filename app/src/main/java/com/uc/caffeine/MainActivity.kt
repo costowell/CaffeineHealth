@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
@@ -126,7 +127,27 @@ class MainActivity : ComponentActivity() {
     ) { /* result handled by the system — no-op */ }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Must run before super.onCreate so the Android 12+ splash is themed correctly;
+        // it tears down on the first Compose frame and hands off to the app shell.
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
+
+        // Expressive exit: the brand mark fades + eases down a touch while the splash
+        // surface dissolves into the app, rather than a hard cut.
+        splashScreen.setOnExitAnimationListener { splashProvider ->
+            splashProvider.iconView.animate()
+                .alpha(0f)
+                .scaleX(0.86f)
+                .scaleY(0.86f)
+                .setDuration(180L)
+                .start()
+            splashProvider.view.animate()
+                .alpha(0f)
+                .setDuration(240L)
+                .withEndAction { splashProvider.remove() }
+                .start()
+        }
+
         enableEdgeToEdge()
         com.uc.caffeine.util.notifications.NotificationChannels.createChannels(this)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

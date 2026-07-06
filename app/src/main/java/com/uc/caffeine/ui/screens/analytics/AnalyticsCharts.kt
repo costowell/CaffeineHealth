@@ -11,15 +11,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Analytics
-import androidx.compose.material.icons.outlined.CalendarToday
+import androidx.compose.material.icons.rounded.Analytics
+import androidx.compose.material.icons.rounded.CalendarToday
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
@@ -44,9 +44,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -72,9 +72,9 @@ import com.uc.caffeine.util.AnalyticsRange
 import kotlin.math.min
 import kotlin.math.roundToInt
 
-internal val AnalyticsCardShape = RoundedCornerShape(28.dp)
+internal val AnalyticsCardShape: Shape
+    @Composable get() = MaterialTheme.shapes.extraLarge
 internal val AnalyticsColumnShape = RoundedCornerShape(14.dp)
-internal val SleepThresholdColor = Color(0xFF6FC06B)
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -164,10 +164,10 @@ internal fun AnalyticsRangeButton(
         stringResource(selectedRange.labelRes)
     }
 
-    ElevatedCard(
+    Card(
         onClick = onClick,
         shape = AnalyticsCardShape,
-        colors = CardDefaults.elevatedCardColors(
+        colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         ),
     ) {
@@ -178,8 +178,7 @@ internal fun AnalyticsRangeButton(
         ) {
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Medium,
+                style = MaterialTheme.typography.labelLargeEmphasized,
             )
             Icon(
                 imageVector = Icons.Rounded.KeyboardArrowDown,
@@ -379,11 +378,11 @@ private fun RangePickerDateField(
     formatter: java.time.format.DateTimeFormatter,
     onClick: () -> Unit,
 ) {
-    ElevatedCard(
+    Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.elevatedCardColors(
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         ),
     ) {
@@ -406,7 +405,7 @@ private fun RangePickerDateField(
                 )
             }
             Icon(
-                imageVector = Icons.Outlined.CalendarToday,
+                imageVector = Icons.Rounded.CalendarToday,
                 contentDescription = null,
                 modifier = Modifier.size(20.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -419,12 +418,12 @@ private fun RangePickerDateField(
 internal fun AnalyticsEmptyState(
     selectedRange: AnalyticsRange,
 ) {
-    ElevatedCard(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
             .testTag("analytics_empty_state"),
         shape = AnalyticsCardShape,
-        colors = CardDefaults.elevatedCardColors(
+        colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         ),
     ) {
@@ -436,15 +435,14 @@ internal fun AnalyticsEmptyState(
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             Icon(
-                imageVector = Icons.Outlined.Analytics,
+                imageVector = Icons.Rounded.Analytics,
                 contentDescription = null,
                 modifier = Modifier.size(54.dp),
                 tint = MaterialTheme.colorScheme.primary,
             )
             Text(
                 text = stringResource(R.string.analytics_nothing_to_chart),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.headlineSmallEmphasized,
                 textAlign = TextAlign.Center,
             )
             Text(
@@ -463,10 +461,10 @@ internal fun AnalyticsChartCard(
     supportingText: String,
     content: @Composable () -> Unit,
 ) {
-    ElevatedCard(
+    Card(
         modifier = Modifier.fillMaxWidth(),
         shape = AnalyticsCardShape,
-        colors = CardDefaults.elevatedCardColors(
+        colors = CardDefaults.cardColors(
             containerColor = CaffeineSurfaceDefaults.chartContainerColor,
         ),
     ) {
@@ -631,16 +629,17 @@ internal fun rememberColumnComponent(
 internal fun rememberSleepThresholdDecoration(
     thresholdLevel: Double,
 ): Decoration {
-    val line = remember {
+    val thresholdColor = MaterialTheme.colorScheme.primary
+    val line = remember(thresholdColor) {
         LineComponent(
-            fill = Fill(SleepThresholdColor.copy(alpha = 0.72f)),
+            fill = Fill(thresholdColor.copy(alpha = 0.72f)),
             thickness = 1.dp,
             shape = RectangleShape,
         )
     }
     val labelComponent = rememberTextComponent(
         style = MaterialTheme.typography.labelSmall.copy(
-            color = SleepThresholdColor,
+            color = thresholdColor,
         ),
     )
 

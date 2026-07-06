@@ -1,4 +1,29 @@
 {
+    "moka": {
+        "90_absorption_rate": 45,
+        "category": "coffee",
+        "consumption_method": "drink",
+        "default_unit": "cup",
+        "description": "Coffee brewed in a stovetop moka pot, where steam pressure pushes hot water through finely ground coffee. The result is strong and concentrated—bolder than drip coffee but typically served in small espresso-sized cups.",
+        "id": "moka",
+        "image_src": "",
+        "name": "Moka Pot Coffee",
+        "relevance": 60,
+        "units": [
+            {
+                "caffeine_content": 100,
+                "grams": null,
+                "milliliters": 60,
+                "unit_text_key": "cup"
+            },
+            {
+                "caffeine_content": 1.7,
+                "grams": null,
+                "milliliters": 1,
+                "unit_text_key": "ml"
+            }
+        ]
+    },
     "28-black-energy-drink": {
         "90_absorption_rate": 45,
         "category": "energy_drink",
@@ -1188,6 +1213,12 @@
                 "grams": 40,
                 "milliliters": null,
                 "unit_text_key": "bar"
+            },
+            {
+                "caffeine_content": 0.43,
+                "grams": 1,
+                "milliliters": null,
+                "unit_text_key": "g"
             }
         ]
     },
@@ -1213,6 +1244,12 @@
                 "grams": 40,
                 "milliliters": null,
                 "unit_text_key": "bar"
+            },
+            {
+                "caffeine_content": 0.86,
+                "grams": 1,
+                "milliliters": null,
+                "unit_text_key": "g"
             }
         ]
     },
@@ -1238,6 +1275,12 @@
                 "grams": 10,
                 "milliliters": null,
                 "unit_text_key": "piece"
+            },
+            {
+                "caffeine_content": 0.8,
+                "grams": 1,
+                "milliliters": null,
+                "unit_text_key": "g"
             }
         ]
     },

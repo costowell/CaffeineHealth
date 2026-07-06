@@ -8,7 +8,7 @@ data class RecentDrink(
     val caffeineMg: Int,
     val emoji: String,
     val presetItemId: String,
-    val quantity: Int,
+    val quantity: Double,
     val unitKey: String,
     val unitCaffeineMg: Double,
     val imageName: String,

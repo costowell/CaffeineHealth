@@ -11,6 +11,12 @@
          that briefly expose the window (e.g. scale-in cross-fades, edge-to-edge insets)
          don't flash white over the themed content. -->
     <color name="window_background">#FFF8F4</color>
+    <!-- Splash screen (light). Background matches window_background / CaffeineBackgroundLight
+         so the hand-off to the first Compose frame is seamless. The icon sits inside a
+         white circle (same value in dark) carrying the taupe + sand Pulse Cup, mirroring
+         the launcher icon's white field. -->
+    <color name="splash_background">#FFF8F4</color>
+    <color name="splash_icon_circle">#FFFFFF</color>
     <!-- Widget colors (light / default) -->
     <color name="widget_surface">#F0E1D8</color>
     <color name="widget_on_surface">#201A17</color>

@@ -160,4 +160,21 @@
 
     <!-- Common -->
     <string name="brand_caffeine_health">Caffeine Health</string>
+
+    <!-- Caffeine Coach (HomeScreen card) -->
+    <string name="coach_title">Kofeiinivalmentaja</string>
+    <string name="coach_headline_now">Ota noin %1$dmg nyt</string>
+    <string name="coach_headline_at">Ota noin %1$dmg noin klo %2$s</string>
+    <string name="coach_reason_sleep_debt">Nukuit %1$s — pienin hyödyllinen annos palautumiseen ilman, että se haittaa yöunta.</string>
+    <string name="coach_reason_afternoon_dip">Ajoitettu ennustettuun iltapäivän notkahdukseen — vähiten kofeiinia, jolla pysyt virkeänä.</string>
+    <string name="coach_reason_stay_sharp">Pienin annos, jolla pysyt keskittymistasosi yläpuolella koko päivän.</string>
+    <string name="coach_residual_note">Laskee ~%1$dmg:aan nukkumaanmenoaikaasi klo %2$s mennessä.</string>
+    <string name="coach_hold_already_alert">Kaikki hyvin — kofeiinia ei tarvita juuri nyt virkeyden ylläpitoon.</string>
+    <string name="coach_hold_already_alert_debt">Pyörit %1$s unilla, mutta olet nyt tarpeeksi virkeä — odota vielä.</string>
+    <string name="coach_hold_bedtime">Jätä kofeiini nyt väliin — nukkumaanmenoaikaasi klo %1$s on liian vähän aikaa lisätä sitä unta vaarantamatta.</string>
+    <string name="coach_connect_sleep">Yhdistä unidata saadaksesi suosituksen, joka on sovitettu todelliseen uneesi.</string>
+    <string name="coach_sleep_hours">%1$dh %2$dm</string>
+    <!-- Caffeine Coach settings -->
+    <string name="coach_setting_label">Kofeiinivalmentaja</string>
+    <string name="coach_setting_description">Ehdottaa pienintä, parhaiten ajoitettua annosta, jolla pysyt virkeänä unta haittaamatta</string>
 </resources>

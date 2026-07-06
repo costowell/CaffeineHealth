@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Animated splash icon: the Pulse Cup glyph with the ECG heartbeat tracing itself
+    in left-to-right (trimPathEnd 0 -> 1) while the cup sits static, like a monitor
+    coming alive. Used via windowSplashScreenAnimatedIcon on Android 12+; the trace
+    runs once and the MainActivity exit listener dissolves the splash into the app.
+-->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="108dp"
+            android:height="108dp"
+            android:viewportWidth="108"
+            android:viewportHeight="108">
+            <!-- Cup body -->
+            <path
+                android:name="cup"
+                android:pathData="M37.5,42 L40.5,68 C41,71.5 43.5,73.5 47,73.5 L61,73.5 C64.5,73.5 67,71.5 67.5,68 L70.5,42 Z"
+                android:strokeColor="#A99C8C"
+                android:strokeWidth="6.5"
+                android:strokeLineCap="round"
+                android:strokeLineJoin="round" />
+            <!-- Handle -->
+            <path
+                android:name="handle"
+                android:pathData="M69.9,47.5 L72.5,47.5 C77.5,47.5 80,50.5 80,54 C80,57.5 77.5,60.5 72.5,60.5 L68.4,60.5"
+                android:strokeColor="#A99C8C"
+                android:strokeWidth="6.5"
+                android:strokeLineCap="round"
+                android:strokeLineJoin="round" />
+            <!-- Heartbeat / pulse — starts fully trimmed and draws itself in -->
+            <path
+                android:name="pulse"
+                android:pathData="M43,57 L50,57 L53,49.5 L56.3,65 L59.5,57 L65,57"
+                android:strokeColor="#E6C8A3"
+                android:strokeWidth="5.5"
+                android:strokeLineCap="round"
+                android:strokeLineJoin="round"
+                android:trimPathEnd="0" />
+        </vector>
+    </aapt:attr>
+    <target android:name="pulse">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="trimPathEnd"
+                android:valueFrom="0"
+                android:valueTo="1"
+                android:valueType="floatType"
+                android:startOffset="150"
+                android:duration="750"
+                android:interpolator="@android:interpolator/fast_out_slow_in" />
+        </aapt:attr>
+    </target>
+</animated-vector>

@@ -304,7 +304,7 @@ fun AddScreen(
                 itemModifier = Modifier.heightIn(min = 65.dp),
                 leadingContent = { recent ->
                     ExpressiveIconBadge(
-                        index = recent.quantity,
+                        index = recent.quantity.toInt(),
                         size = 44.dp,
                     ) {
                         DrinkIcon(
@@ -520,14 +520,14 @@ private fun AddDrinkServingSheet(
     viewModel: CaffeineViewModel,
     userSettings: com.uc.caffeine.data.UserSettings,
     todayEntries: List<ConsumptionEntry>,
-    onAdd: (Int, DrinkUnit, Long, Int) -> Unit,
+    onAdd: (Double, DrinkUnit, Long, Int) -> Unit,
     onEditCustomDrink: (() -> Unit)? = null,
 ) {
     val units by produceState<List<DrinkUnit>?>(initialValue = null, key1 = preset.id) {
         value = viewModel.getUnitsForDrink(preset.id)
     }
     val frozenTodayEntries = remember { todayEntries }
-    var quantity by remember(preset.id) { mutableIntStateOf(1) }
+    var quantity by remember(preset.id) { mutableStateOf(1.0) }
     var startedAtMillis by remember(preset.id) { mutableStateOf(System.currentTimeMillis()) }
     var durationMinutes by remember(preset.id) {
         mutableIntStateOf(DEFAULT_CONSUMPTION_DURATION_MINUTES)
@@ -603,9 +603,8 @@ private fun AddDrinkServingSheet(
         } else {
             ServingQuantityStepper(
                 quantity = quantity,
-                onDecrement = { quantity = (quantity - 1).coerceAtLeast(1) },
-                onIncrement = { quantity += 1 },
-                onQuantitySet = { quantity = it },
+                unitKey = selectedUnit?.unitKey ?: preset.defaultUnit,
+                onQuantityChange = { quantity = it },
             )
 
             HorizontalDivider()

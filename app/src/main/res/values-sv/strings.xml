@@ -160,4 +160,21 @@
 
     <!-- Common -->
     <string name="brand_caffeine_health">Caffeine Health</string>
+
+    <!-- Caffeine Coach (HomeScreen card) -->
+    <string name="coach_title">Koffeincoach</string>
+    <string name="coach_headline_now">Ta cirka %1$dmg nu</string>
+    <string name="coach_headline_at">Ta cirka %1$dmg runt %2$s</string>
+    <string name="coach_reason_sleep_debt">Du sov %1$s — den minsta användbara dosen för att återhämta dig utan att skada nattens sömn.</string>
+    <string name="coach_reason_afternoon_dip">Anpassad till din väntade eftermiddagssvacka — minsta möjliga koffein för att hålla dig skärpt.</string>
+    <string name="coach_reason_stay_sharp">Den minsta dosen för att hålla dig över din fokusnivå under dagen.</string>
+    <string name="coach_residual_note">Sjunker till ~%1$dmg till din läggdags kl. %2$s.</string>
+    <string name="coach_hold_already_alert">Allt är bra — inget koffein behövs just nu för att hålla dig skärpt.</string>
+    <string name="coach_hold_already_alert_debt">Du kör på %1$s sömn, men du är pigg nog just nu — vänta lite.</string>
+    <string name="coach_hold_bedtime">Hoppa över koffein nu — det är för nära din läggdags kl. %1$s för att lägga till mer utan att riskera sömnen.</string>
+    <string name="coach_connect_sleep">Anslut sömndata för en rekommendation anpassad efter hur du faktiskt sov.</string>
+    <string name="coach_sleep_hours">%1$dh %2$dm</string>
+    <!-- Caffeine Coach settings -->
+    <string name="coach_setting_label">Koffeincoach</string>
+    <string name="coach_setting_description">Föreslår den minsta, bäst tajmade dosen för att hålla dig skärpt utan att skada sömnen</string>
 </resources>

@@ -14,11 +14,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Bolt
-import androidx.compose.material.icons.filled.DonutLarge
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Translate
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -51,11 +50,10 @@ private data class FeatureItem(
 )
 
 private val features = listOf(
-    FeatureItem(Icons.Filled.DonutLarge, R.string.whats_new_circular_title, R.string.whats_new_circular_body),
-    FeatureItem(Icons.Filled.Bolt, R.string.whats_new_chart_title, R.string.whats_new_chart_body),
-    FeatureItem(Icons.Filled.BarChart, R.string.whats_new_analytics_title, R.string.whats_new_analytics_body),
-    FeatureItem(Icons.Filled.Translate, R.string.whats_new_languages_title, R.string.whats_new_languages_body),
-    FeatureItem(Icons.Filled.Favorite, R.string.whats_new_fixes_title, R.string.whats_new_fixes_body),
+    FeatureItem(Icons.Filled.Bolt, R.string.whats_new_coach_title, R.string.whats_new_coach_body),
+    FeatureItem(Icons.Filled.Tune, R.string.whats_new_amounts_title, R.string.whats_new_amounts_body),
+    FeatureItem(Icons.Filled.AutoAwesome, R.string.whats_new_design_title, R.string.whats_new_design_body),
+    FeatureItem(Icons.Filled.Bedtime, R.string.whats_new_sleep_title, R.string.whats_new_sleep_body),
 )
 
 @OptIn(ExperimentalMaterial3Api::class)

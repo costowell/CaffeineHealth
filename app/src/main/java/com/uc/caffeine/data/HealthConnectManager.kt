@@ -10,6 +10,7 @@ import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
 import androidx.health.connect.client.units.Mass
 import com.uc.caffeine.data.model.ConsumptionEntry
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneId
@@ -20,6 +21,14 @@ data class ImportedCaffeineRecord(
     val caffeineMg: Int,
     val startedAtMillis: Long,
     val durationMinutes: Int,
+)
+
+/** Last night's sleep, used by the caffeine coach for sleep-debt and time-awake. */
+data class LastNightSleep(
+    val bedtimeMillis: Long,
+    val wakeMillis: Long,
+    /** Minutes actually asleep (excludes in-bed awake stages when stage data exists). */
+    val asleepMinutes: Int,
 )
 
 class HealthConnectManager(private val context: Context) {
@@ -37,51 +46,69 @@ class HealthConnectManager(private val context: Context) {
     private val client: HealthConnectClient?
         get() = if (isAvailable()) HealthConnectClient.getOrCreate(context) else null
 
-    suspend fun hasPermission(): Boolean {
-        val c = client ?: return false
-        return c.permissionController.getGrantedPermissions().contains(nutritionWrite)
+    // Null when Health Connect is unreachable (not installed, updating, binder failure) —
+    // callers that act on "permission revoked" must distinguish that from "can't tell".
+    private suspend fun grantedPermissionsOrNull(): Set<String>? {
+        val c = client ?: return null
+        return runCatching { c.permissionController.getGrantedPermissions() }.getOrNull()
     }
 
-    suspend fun hasNutritionReadPermission(): Boolean {
-        val c = client ?: return false
-        return c.permissionController.getGrantedPermissions().contains(nutritionRead)
-    }
+    suspend fun hasPermission(): Boolean =
+        grantedPermissionsOrNull()?.contains(nutritionWrite) == true
 
-    suspend fun hasSleepPermission(): Boolean {
-        val c = client ?: return false
-        return c.permissionController.getGrantedPermissions().contains(sleepRead)
-    }
+    suspend fun hasNutritionReadPermission(): Boolean =
+        grantedPermissionsOrNull()?.contains(nutritionRead) == true
+
+    suspend fun hasSleepPermission(): Boolean =
+        grantedPermissionsOrNull()?.contains(sleepRead) == true
+
+    /** True only when Health Connect answered and the sleep permission is definitively not granted. */
+    suspend fun isSleepPermissionRevoked(): Boolean =
+        grantedPermissionsOrNull()?.let { sleepRead !in it } == true
 
     private fun clientRecordId(entryId: Int): String = "caffeine_entry_$entryId"
+
+    private fun ConsumptionEntry.toNutritionRecord(zoneId: ZoneId): NutritionRecord {
+        val start = Instant.ofEpochMilli(startedAtMillis)
+        val end = start.plusSeconds(normalizedDurationMinutes * 60L)
+        val zoneRules = zoneId.rules
+        return NutritionRecord(
+            startTime = start,
+            endTime = end,
+            caffeine = Mass.milligrams(caffeineMg.toDouble()),
+            name = drinkName,
+            startZoneOffset = zoneRules.getOffset(start),
+            endZoneOffset = zoneRules.getOffset(end),
+            metadata = HCMetadata.manualEntry(
+                clientRecordId = clientRecordId(id),
+                clientRecordVersion = System.currentTimeMillis(),
+            ),
+        )
+    }
 
     suspend fun writeEntry(entry: ConsumptionEntry, zoneId: ZoneId = ZoneId.systemDefault()) {
         val c = client ?: return
         // Imported records are owned by another app — never echo them back
         if (entry.healthConnectRecordId != null) return
         if (!hasPermission()) return
-        val start = Instant.ofEpochMilli(entry.startedAtMillis)
-        val end = start.plusSeconds(entry.normalizedDurationMinutes * 60L)
-        val zoneRules = zoneId.rules
         runCatching {
-            c.insertRecords(listOf(
-                NutritionRecord(
-                    startTime = start,
-                    endTime = end,
-                    caffeine = Mass.milligrams(entry.caffeineMg.toDouble()),
-                    name = entry.drinkName,
-                    startZoneOffset = zoneRules.getOffset(start),
-                    endZoneOffset = zoneRules.getOffset(end),
-                    metadata = HCMetadata.manualEntry(
-                        clientRecordId = clientRecordId(entry.id),
-                        clientRecordVersion = System.currentTimeMillis(),
-                    ),
-                )
-            ))
+            c.insertRecords(listOf(entry.toNutritionRecord(zoneId)))
         }
     }
 
     suspend fun syncAll(entries: List<ConsumptionEntry>, zoneId: ZoneId = ZoneId.systemDefault()) {
-        entries.forEach { writeEntry(it, zoneId) }
+        val c = client ?: return
+        if (!hasPermission()) return
+        // Batched inserts: one permission check and one IPC per chunk, instead of two per
+        // entry — Health Connect rate-limits foreground calls, so per-entry inserts can
+        // silently drop most of a large history.
+        entries
+            .filter { it.healthConnectRecordId == null }
+            .map { it.toNutritionRecord(zoneId) }
+            .chunked(INSERT_BATCH_SIZE)
+            .forEach { batch ->
+                runCatching { c.insertRecords(batch) }
+            }
     }
 
     suspend fun deleteEntry(entry: ConsumptionEntry) {
@@ -149,6 +176,7 @@ class HealthConnectManager(private val context: Context) {
 
     suspend fun readSleepBedtime(mode: HcSleepMode, zoneId: ZoneId = ZoneId.systemDefault()): LocalTime? {
         val c = client ?: return null
+        if (!hasSleepPermission()) return null
         val now = ZonedDateTime.now(zoneId)
         val rangeStart = when (mode) {
             HcSleepMode.PREVIOUS_DAY -> now.minusDays(2).toInstant()
@@ -163,21 +191,66 @@ class HealthConnectManager(private val context: Context) {
             )
         }.getOrNull() ?: return null
 
-        if (response.records.isEmpty()) return null
+        // Naps would otherwise register as "bedtime" (an afternoon nap is the most
+        // recent session) — only sessions long enough to be a night's sleep count.
+        val nightSessions = response.records.filter {
+            Duration.between(it.startTime, it.endTime).toMinutes() >= MIN_NIGHT_SLEEP_MINUTES
+        }
+        if (nightSessions.isEmpty()) return null
 
         return when (mode) {
             HcSleepMode.PREVIOUS_DAY -> {
-                val latest = response.records.maxByOrNull { it.startTime } ?: return null
+                val latest = nightSessions.maxByOrNull { it.startTime } ?: return null
                 val zdt = latest.startTime.atZone(zoneId)
                 LocalTime.of(zdt.hour, zdt.minute)
             }
             HcSleepMode.SEVEN_DAY_AVERAGE -> {
                 averageSleepStartTime(
-                    sessions = response.records.sortedByDescending { it.startTime }.take(7),
+                    sessions = nightSessions.sortedByDescending { it.startTime }.take(7),
                     zoneId = zoneId,
                 )
             }
         }
+    }
+
+    /**
+     * Reads the most recent night's sleep session (start, end, and minutes asleep).
+     *
+     * Unlike [readSleepBedtime] — which only needs the bedtime to anchor a forecast — the
+     * coach needs the wake time (for time-awake) and the actual sleep duration (for sleep
+     * debt). When the source provides sleep stages we sum the non-awake stages; otherwise
+     * we fall back to the raw session span.
+     */
+    suspend fun readLastNightSleep(zoneId: ZoneId = ZoneId.systemDefault()): LastNightSleep? {
+        val c = client ?: return null
+        if (!hasSleepPermission()) return null
+        val now = ZonedDateTime.now(zoneId)
+        val response = runCatching {
+            c.readRecords(
+                ReadRecordsRequest(
+                    recordType = SleepSessionRecord::class,
+                    timeRangeFilter = TimeRangeFilter.between(now.minusDays(2).toInstant(), now.toInstant()),
+                )
+            )
+        }.getOrNull() ?: return null
+
+        val latestNight = response.records
+            .filter { Duration.between(it.startTime, it.endTime).toMinutes() >= MIN_NIGHT_SLEEP_MINUTES }
+            .maxByOrNull { it.startTime }
+            ?: return null
+
+        val stagedAsleepMinutes = latestNight.stages
+            .filter { it.stage !in AWAKE_STAGE_TYPES }
+            .sumOf { Duration.between(it.startTime, it.endTime).toMinutes() }
+        val asleepMinutes = stagedAsleepMinutes
+            .takeIf { it > 0 }
+            ?: Duration.between(latestNight.startTime, latestNight.endTime).toMinutes()
+
+        return LastNightSleep(
+            bedtimeMillis = latestNight.startTime.toEpochMilli(),
+            wakeMillis = latestNight.endTime.toEpochMilli(),
+            asleepMinutes = asleepMinutes.toInt().coerceAtLeast(0),
+        )
     }
 
     private fun averageSleepStartTime(sessions: List<SleepSessionRecord>, zoneId: ZoneId): LocalTime? {
@@ -189,5 +262,17 @@ class HealthConnectManager(private val context: Context) {
         }
         val avgMinutes = (minutesList.sum() / minutesList.size) % 1440
         return LocalTime.of(avgMinutes / 60, avgMinutes % 60)
+    }
+
+    private companion object {
+        const val INSERT_BATCH_SIZE = 100
+        const val MIN_NIGHT_SLEEP_MINUTES = 180L
+
+        // Stages that count as "in bed but not asleep" — excluded from sleep-debt math.
+        val AWAKE_STAGE_TYPES = setOf(
+            SleepSessionRecord.STAGE_TYPE_AWAKE,
+            SleepSessionRecord.STAGE_TYPE_AWAKE_IN_BED,
+            SleepSessionRecord.STAGE_TYPE_OUT_OF_BED,
+        )
     }
 }

@@ -160,4 +160,21 @@
 
     <!-- Common -->
     <string name="brand_caffeine_health">Caffeine Health</string>
+
+    <!-- Caffeine Coach (HomeScreen card) -->
+    <string name="coach_title">కాఫీన్ కోచ్</string>
+    <string name="coach_headline_now">ఇప్పుడు సుమారు %1$dmg తీసుకోండి</string>
+    <string name="coach_headline_at">%2$s ప్రాంతంలో సుమారు %1$dmg తీసుకోండి</string>
+    <string name="coach_reason_sleep_debt">మీరు %1$s నిద్రపోయారు — ఈ రాత్రి నిద్రకు హాని కలిగించకుండా కోలుకోవడానికి అతి చిన్న ఉపయోగకర మోతాదు.</string>
+    <string name="coach_reason_afternoon_dip">మీ అంచనా వేసిన మధ్యాహ్నం నీరసానికి సరిపడేలా — అప్రమత్తంగా ఉండటానికి కనీస కాఫీన్.</string>
+    <string name="coach_reason_stay_sharp">రోజంతా మీ ఏకాగ్రత స్థాయికి పైన ఉండటానికి అతి చిన్న మోతాదు.</string>
+    <string name="coach_residual_note">మీ నిద్ర సమయం %2$s నాటికి ~%1$dmgకి తగ్గుతుంది.</string>
+    <string name="coach_hold_already_alert">మీరు సిద్ధంగా ఉన్నారు — అప్రమత్తంగా ఉండటానికి ఇప్పుడు కాఫీన్ అవసరం లేదు.</string>
+    <string name="coach_hold_already_alert_debt">మీరు %1$s నిద్రతో నడుస్తున్నారు, కానీ ఇప్పుడు తగినంత అప్రమత్తంగా ఉన్నారు — కొద్దిసేపు ఆగండి.</string>
+    <string name="coach_hold_bedtime">ఇప్పుడు కాఫీన్ వద్దు — ఇది మీ నిద్ర సమయం %1$sకి చాలా దగ్గరగా ఉంది, నిద్రకు ప్రమాదం లేకుండా చేర్చడం కష్టం.</string>
+    <string name="coach_connect_sleep">మీరు నిజంగా ఎలా నిద్రపోయారో దానికి అనుగుణంగా సిఫార్సు కోసం నిద్ర డేటాను కనెక్ట్ చేయండి.</string>
+    <string name="coach_sleep_hours">%1$dh %2$dm</string>
+    <!-- Caffeine Coach settings -->
+    <string name="coach_setting_label">కాఫీన్ కోచ్</string>
+    <string name="coach_setting_description">నిద్రకు హాని కలిగించకుండా అప్రమత్తంగా ఉండటానికి అతి చిన్న, ఉత్తమ సమయపు మోతాదును సూచిస్తుంది</string>
 </resources>

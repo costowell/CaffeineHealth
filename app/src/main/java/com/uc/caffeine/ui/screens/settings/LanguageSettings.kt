@@ -11,7 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItemDefaults
@@ -114,7 +114,7 @@ internal fun LanguageSettingsScreen(
                     trailingContent = if (isSelected) {
                         {
                             Icon(
-                                imageVector = Icons.Filled.Check,
+                                imageVector = Icons.Rounded.Check,
                                 contentDescription = stringResource(R.string.language_selected_cd),
                                 tint = MaterialTheme.colorScheme.primary,
                             )

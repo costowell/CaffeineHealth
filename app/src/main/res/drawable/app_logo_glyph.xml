@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Standalone "Pulse Cup" glyph (no background) for the Android 12+ splash icon and
+    the in-app brand lockups / widget headers. Palette matches the companion
+    "Home Health" mark — taupe cup outline + warm sand pulse — with the house swapped
+    for a coffee cup. The artwork is inset to the central ~2/3 of the canvas so it
+    sits comfortably INSIDE the circular splash icon-background (the system masks the
+    animated icon to a circle that only reveals the inner keyline). Same safe-zone
+    proportions as ic_launcher_foreground, so launcher / splash / in-app all match.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Cup body -->
+    <path
+        android:pathData="M37.5,42 L40.5,68 C41,71.5 43.5,73.5 47,73.5 L61,73.5 C64.5,73.5 67,71.5 67.5,68 L70.5,42 Z"
+        android:strokeColor="#A99C8C"
+        android:strokeWidth="6.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- Handle — full D-loop: stubs off the wall with a rounded outer arc -->
+    <path
+        android:pathData="M69.9,47.5 L72.5,47.5 C77.5,47.5 80,50.5 80,54 C80,57.5 77.5,60.5 72.5,60.5 L68.4,60.5"
+        android:strokeColor="#A99C8C"
+        android:strokeWidth="6.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- Heartbeat / pulse -->
+    <path
+        android:pathData="M43,57 L50,57 L53,49.5 L56.3,65 L59.5,57 L65,57"
+        android:strokeColor="#E6C8A3"
+        android:strokeWidth="5.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

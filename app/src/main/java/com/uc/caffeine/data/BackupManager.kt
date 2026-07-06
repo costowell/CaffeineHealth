@@ -42,6 +42,7 @@ class BackupManager(
                 put("absorptionRate", entry.absorptionRate)
                 put("startedAtMillis", entry.startedAtMillis)
                 put("durationMinutes", entry.durationMinutes)
+                entry.healthConnectRecordId?.let { put("healthConnectRecordId", it) }
             })
         }
         root.put("consumptionLog", logArray)
@@ -70,6 +71,8 @@ class BackupManager(
             pf.heavyCaffeine?.let { put("profileHeavyCaffeine", it) }
             pf.liverDisease?.let { put("profileLiverDisease", it) }
             put("profileMedications", JSONArray(pf.medications.toList()))
+            put("hcSleepMode", settings.hcSleepMode.name)
+            put("caffeineCoachEnabled", settings.caffeineCoachEnabled)
             put("weeklySleepRotaEnabled", settings.weeklySleepRotaEnabled)
             put("weeklySleepRota", JSONObject().apply {
                 settings.weeklySleepRota.forEach { (day, time) ->
@@ -138,13 +141,14 @@ class BackupManager(
                     caffeineMg = obj.getInt("caffeineMg"),
                     emoji = obj.optString("emoji", "☕"),
                     presetItemId = obj.optString("presetItemId", ""),
-                    quantity = obj.optInt("quantity", 1),
+                    quantity = obj.optDouble("quantity", 1.0),
                     unitKey = obj.optString("unitKey", ""),
                     unitCaffeineMg = obj.optDouble("unitCaffeineMg", 0.0),
                     imageName = obj.optString("imageName", ""),
                     absorptionRate = obj.optInt("absorptionRate", 45),
                     startedAtMillis = obj.getLong("startedAtMillis"),
                     durationMinutes = obj.optInt("durationMinutes", 10),
+                    healthConnectRecordId = obj.optString("healthConnectRecordId").takeIf { it.isNotEmpty() },
                 )
             )
         }
@@ -178,7 +182,9 @@ class BackupManager(
                 cyp1a2Genotype = Cyp1a2Genotype.fromStorage(settingsObj.optString("cyp1a2Genotype")),
                 ahrGenotype = AhrGenotype.fromStorage(settingsObj.optString("ahrGenotype")),
                 hormonalStatus = HormonalStatus.fromStorage(settingsObj.optString("hormonalStatus")),
+                hcSleepMode = HcSleepMode.fromStorage(settingsObj.optString("hcSleepMode")),
                 profileFactors = pf,
+                caffeineCoachEnabled = settingsObj.optBoolean("caffeineCoachEnabled", true),
                 weeklySleepRotaEnabled = settingsObj.optBoolean("weeklySleepRotaEnabled", false),
                 weeklySleepRota = settingsObj.optJSONObject("weeklySleepRota")?.let { obj ->
                     buildMap {

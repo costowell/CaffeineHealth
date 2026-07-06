@@ -51,6 +51,7 @@ object SettingsKeys {
     val COLOR_PALETTE = stringPreferencesKey("color_palette")
     val WEEKLY_SLEEP_ROTA_ENABLED = booleanPreferencesKey("weekly_sleep_rota_enabled")
     val WEEKLY_SLEEP_ROTA = stringSetPreferencesKey("weekly_sleep_rota")
+    val CAFFEINE_COACH_ENABLED = booleanPreferencesKey("caffeine_coach_enabled")
 
     // Raw onboarding profile factors
     val PROFILE_AGE_BUCKET = stringPreferencesKey("profile_age_bucket")
@@ -237,6 +238,13 @@ class SettingsRepository(private val context: Context) {
         }
     }
 
+    suspend fun clearHcSleepTime() {
+        context.dataStore.edit { prefs ->
+            prefs.remove(SettingsKeys.HC_SLEEP_TIME_HOUR)
+            prefs.remove(SettingsKeys.HC_SLEEP_TIME_MINUTE)
+        }
+    }
+
     suspend fun updateInactivityReminderEnabled(enabled: Boolean) {
         context.dataStore.edit { prefs ->
             prefs[SettingsKeys.INACTIVITY_REMINDER_ENABLED] = enabled
@@ -275,6 +283,12 @@ class SettingsRepository(private val context: Context) {
             val current = (prefs[SettingsKeys.WEEKLY_SLEEP_ROTA] ?: emptySet()).toMutableSet()
             current.removeAll { it.startsWith("${day.name}=") }
             prefs[SettingsKeys.WEEKLY_SLEEP_ROTA] = current
+        }
+    }
+
+    suspend fun updateCaffeineCoachEnabled(enabled: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[SettingsKeys.CAFFEINE_COACH_ENABLED] = enabled
         }
     }
 
@@ -322,6 +336,10 @@ class SettingsRepository(private val context: Context) {
             }
             prefs[SettingsKeys.WEEKLY_SLEEP_ROTA_ENABLED] = settings.weeklySleepRotaEnabled
             prefs[SettingsKeys.WEEKLY_SLEEP_ROTA] = encodeWeeklySleepRota(settings.weeklySleepRota)
+            prefs[SettingsKeys.CAFFEINE_COACH_ENABLED] = settings.caffeineCoachEnabled
+            // HC enabled flags and cached sleep time are deliberately not imported —
+            // they're bound to this device's Health Connect permission grants.
+            prefs[SettingsKeys.HC_SLEEP_MODE] = settings.hcSleepMode.name
         }
     }
 }
@@ -359,6 +377,7 @@ internal fun Preferences.toUserSettings(defaultSettings: UserSettings): UserSett
                else AppColorPalette.ESPRESSO,
         weeklySleepRotaEnabled = this[SettingsKeys.WEEKLY_SLEEP_ROTA_ENABLED] ?: false,
         weeklySleepRota = decodeWeeklySleepRota(this[SettingsKeys.WEEKLY_SLEEP_ROTA]),
+        caffeineCoachEnabled = this[SettingsKeys.CAFFEINE_COACH_ENABLED] ?: defaultSettings.caffeineCoachEnabled,
     )
 }
 

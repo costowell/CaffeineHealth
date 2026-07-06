@@ -9,20 +9,26 @@ fun formatUnitLabel(unitKey: String): String {
     return unitKey.replace("(", " (")
 }
 
+// Renders a possibly-fractional quantity without a trailing ".0" for whole numbers.
+// 1.0 -> "1", 1.5 -> "1.5", 30.0 -> "30", 12.25 -> "12.25"
+fun formatQuantity(quantity: Double): String {
+    return DecimalFormat("0.##").format(quantity)
+}
+
 fun formatServingSummary(
-    quantity: Int,
+    quantity: Double,
     unitKey: String,
 ): String {
-    val safeQuantity = quantity.coerceAtLeast(1)
+    val safeQuantity = quantity.coerceAtLeast(MIN_SERVING_QUANTITY)
     val label = pluralizeUnitKey(unitKey, safeQuantity)
-    return "$safeQuantity ${formatUnitLabel(label)}"
+    return "${formatQuantity(safeQuantity)} ${formatUnitLabel(label)}"
 }
 
 fun calculateServingTotalCaffeine(
-    quantity: Int,
+    quantity: Double,
     unitCaffeineMg: Double,
 ): Int {
-    return (quantity.coerceAtLeast(1) * unitCaffeineMg).roundToInt()
+    return (quantity.coerceAtLeast(MIN_SERVING_QUANTITY) * unitCaffeineMg).roundToInt()
 }
 
 fun formatCaffeineAmount(value: Double): String {
@@ -45,17 +51,37 @@ fun findMatchingUnit(
         ?: units.firstOrNull()
 }
 
+// Smallest serving we allow; also the floor the stepper decrements to.
+const val MIN_SERVING_QUANTITY = 0.25
+
+// How much the +/- stepper moves per tap, tuned per unit so volume/weight units
+// don't require hundreds of taps (issue: "click 330 times to input a small drink").
+fun quantityStepFor(unitKey: String): Double = when (unitKey) {
+    "ml" -> 10.0
+    "g" -> 5.0
+    "liter" -> 1.0
+    else -> 1.0
+}
+
+// One-tap "classic size" shortcuts shown beneath the stepper for volume/weight units.
+fun quickPickQuantitiesFor(unitKey: String): List<Double> = when (unitKey) {
+    "ml" -> listOf(100.0, 250.0, 330.0, 500.0)
+    "g" -> listOf(10.0, 25.0, 50.0, 100.0)
+    else -> emptyList()
+}
+
 private fun pluralizeUnitKey(
     unitKey: String,
-    quantity: Int,
+    quantity: Double,
 ): String {
-    if (quantity == 1) return unitKey
+    if (quantity == 1.0) return unitKey
 
     val suffix = unitKey.substringAfter('(', missingDelimiterValue = "")
     val base = unitKey.substringBefore('(')
 
     val pluralBase = when (base) {
         "g" -> "g"
+        "ml" -> "ml"
         "fl oz" -> "fl oz"
         "piece" -> "pieces"
         else -> "${base}s"

@@ -99,7 +99,10 @@ class ChartDataGeneratorTest {
         )
 
         assertEquals(3, data.consumptionMarkers.size)
-        assertEquals("\u2615\uD83C\uDF75", data.consumptionMarkers.first().emojiLabel)
+        assertEquals(
+            listOf("\u2615", "\uD83C\uDF75"),
+            data.consumptionMarkers.first().entries.map { it.emoji },
+        )
         assertEquals(
             ChartDataGenerator.timestampToDomainX(
                 data.domainStartMillis,

@@ -14,25 +14,26 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.NewReleases
-import androidx.compose.material.icons.filled.NotificationsActive
-import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material.icons.rounded.NewReleases
+import androidx.compose.material.icons.rounded.NotificationsActive
+import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material.icons.rounded.Schedule
+import androidx.compose.material.icons.rounded.Storage
+import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.MaterialShapes
 import com.uc.caffeine.ui.components.segmentedListItemShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Text
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -78,43 +79,43 @@ internal fun SettingsListScreen(
         SettingsCategoryItem(
             title = stringResource(R.string.settings_caffeine_profile_title),
             summary = stringResource(R.string.settings_caffeine_profile_summary),
-            icon = Icons.Filled.Tune,
+            icon = Icons.Rounded.Tune,
             onClick = onCaffeineProfileClick,
         ),
         SettingsCategoryItem(
             title = stringResource(R.string.settings_appearance_title),
             summary = stringResource(R.string.settings_appearance_summary),
-            icon = Icons.Filled.Palette,
+            icon = Icons.Rounded.Palette,
             onClick = onAppearanceClick,
         ),
         SettingsCategoryItem(
             title = stringResource(R.string.settings_language_title),
             summary = stringResource(R.string.settings_language_summary),
-            icon = Icons.Filled.Language,
+            icon = Icons.Rounded.Language,
             onClick = onLanguageClick,
         ),
         SettingsCategoryItem(
             title = stringResource(R.string.settings_date_time_title),
             summary = stringResource(R.string.settings_date_time_summary),
-            icon = Icons.Filled.Schedule,
+            icon = Icons.Rounded.Schedule,
             onClick = onDateTimeClick,
         ),
         SettingsCategoryItem(
             title = stringResource(R.string.settings_health_connect_title),
             summary = stringResource(R.string.settings_health_connect_summary),
-            icon = Icons.Filled.Favorite,
+            icon = Icons.Rounded.Favorite,
             onClick = onHealthConnectClick,
         ),
         SettingsCategoryItem(
             title = stringResource(R.string.settings_my_data_title),
             summary = stringResource(R.string.settings_my_data_summary),
-            icon = Icons.Filled.Storage,
+            icon = Icons.Rounded.Storage,
             onClick = onMyDataClick,
         ),
         SettingsCategoryItem(
             title = stringResource(R.string.settings_notifications_title),
             summary = stringResource(R.string.settings_notifications_summary),
-            icon = Icons.Filled.NotificationsActive,
+            icon = Icons.Rounded.NotificationsActive,
             onClick = onNotificationsClick,
         ),
     )
@@ -183,7 +184,7 @@ internal fun SettingsListScreen(
                             contentDescription = null,
                             modifier = Modifier
                                 .size(40.dp)
-                                .clip(RoundedCornerShape(10.dp)),
+                                .clip(MaterialShapes.Cookie9Sided.toShape()),
                         )
                     },
                     content = {
@@ -223,7 +224,7 @@ internal fun SettingsListScreen(
                     },
                     leadingContent = {
                         Icon(
-                            imageVector = Icons.Filled.NewReleases,
+                            imageVector = Icons.Rounded.NewReleases,
                             contentDescription = null,
                         )
                     },

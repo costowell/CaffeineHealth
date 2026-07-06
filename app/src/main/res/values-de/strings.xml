@@ -160,4 +160,21 @@
 
     <!-- Common -->
     <string name="brand_caffeine_health">Caffeine Health</string>
+
+    <!-- Caffeine Coach (HomeScreen card) -->
+    <string name="coach_title">Koffein-Coach</string>
+    <string name="coach_headline_now">Jetzt etwa %1$dmg trinken</string>
+    <string name="coach_headline_at">Etwa %1$dmg gegen %2$s trinken</string>
+    <string name="coach_reason_sleep_debt">Du hast %1$s geschlafen – die kleinste sinnvolle Dosis zur Erholung, ohne den Schlaf heute Nacht zu stören.</string>
+    <string name="coach_reason_afternoon_dip">Abgestimmt auf dein vorhergesagtes Nachmittagstief – das Minimum an Koffein, um wach zu bleiben.</string>
+    <string name="coach_reason_stay_sharp">Die kleinste Dosis, um den ganzen Tag über deinem Konzentrationsniveau zu bleiben.</string>
+    <string name="coach_residual_note">Bis zu deiner Schlafenszeit um %2$s auf ~%1$dmg abgebaut.</string>
+    <string name="coach_hold_already_alert">Alles gut – jetzt ist kein Koffein nötig, um wach zu bleiben.</string>
+    <string name="coach_hold_already_alert_debt">Du läufst auf %1$s Schlaf, bist aber gerade wach genug – warte vorerst ab.</string>
+    <string name="coach_hold_bedtime">Jetzt kein Koffein – zu kurz vor deiner Schlafenszeit um %1$s, um noch welches ohne Schlafrisiko hinzuzufügen.</string>
+    <string name="coach_connect_sleep">Verbinde Schlafdaten für eine Empfehlung, die auf deinen tatsächlichen Schlaf abgestimmt ist.</string>
+    <string name="coach_sleep_hours">%1$dh %2$dm</string>
+    <!-- Caffeine Coach settings -->
+    <string name="coach_setting_label">Koffein-Coach</string>
+    <string name="coach_setting_description">Schlägt die kleinste, optimal getimte Dosis vor, um wach zu bleiben, ohne den Schlaf zu stören</string>
 </resources>

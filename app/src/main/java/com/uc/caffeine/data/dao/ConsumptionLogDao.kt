@@ -29,7 +29,7 @@ interface ConsumptionLogDao {
     suspend fun updateEntryById(
         entryId: Int,
         caffeineMg: Int,
-        quantity: Int,
+        quantity: Double,
         unitKey: String,
         unitCaffeineMg: Double,
         startedAtMillis: Long,

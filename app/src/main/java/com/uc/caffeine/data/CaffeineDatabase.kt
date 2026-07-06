@@ -7,9 +7,11 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.uc.caffeine.data.dao.ConsumptionLogDao
+import com.uc.caffeine.data.dao.DismissedHcRecordDao
 import com.uc.caffeine.data.dao.DrinkPresetDao
 import com.uc.caffeine.data.dao.DrinkUnitDao
 import com.uc.caffeine.data.model.ConsumptionEntry
+import com.uc.caffeine.data.model.DismissedHealthConnectRecord
 import com.uc.caffeine.data.model.DrinkPreset
 import com.uc.caffeine.data.model.DrinkUnit
 import com.uc.caffeine.data.model.defaultDrinkPresets
@@ -18,8 +20,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Database(
-    entities = [DrinkPreset::class, DrinkUnit::class, ConsumptionEntry::class],
-    version = 10,
+    entities = [DrinkPreset::class, DrinkUnit::class, ConsumptionEntry::class, DismissedHealthConnectRecord::class],
+    version = 12,
     exportSchema = false
 )
 abstract class CaffeineDatabase : RoomDatabase() {
@@ -27,6 +29,7 @@ abstract class CaffeineDatabase : RoomDatabase() {
     abstract fun drinkPresetDao(): DrinkPresetDao
     abstract fun drinkUnitDao(): DrinkUnitDao
     abstract fun consumptionLogDao(): ConsumptionLogDao
+    abstract fun dismissedHcRecordDao(): DismissedHcRecordDao
 
     companion object {
         @Volatile
@@ -38,6 +41,51 @@ abstract class CaffeineDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `hc_dismissed_records` (" +
+                        "`recordId` TEXT NOT NULL, " +
+                        "`dismissedAtMillis` INTEGER NOT NULL, " +
+                        "PRIMARY KEY(`recordId`))"
+                )
+            }
+        }
+
+        // consumption_log.quantity changed Int -> Double to support fractional servings
+        // (e.g. 1.5 tsp, 30 g). SQLite can't ALTER a column type, so recreate the table.
+        private val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `consumption_log_new` (" +
+                        "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "`drinkName` TEXT NOT NULL, " +
+                        "`caffeineMg` INTEGER NOT NULL, " +
+                        "`emoji` TEXT NOT NULL, " +
+                        "`presetItemId` TEXT NOT NULL, " +
+                        "`quantity` REAL NOT NULL, " +
+                        "`unitKey` TEXT NOT NULL, " +
+                        "`unitCaffeineMg` REAL NOT NULL, " +
+                        "`imageName` TEXT NOT NULL, " +
+                        "`absorptionRate` INTEGER NOT NULL, " +
+                        "`startedAtMillis` INTEGER NOT NULL, " +
+                        "`durationMinutes` INTEGER NOT NULL, " +
+                        "`healthConnectRecordId` TEXT)"
+                )
+                db.execSQL(
+                    "INSERT INTO `consumption_log_new` (" +
+                        "`id`, `drinkName`, `caffeineMg`, `emoji`, `presetItemId`, `quantity`, " +
+                        "`unitKey`, `unitCaffeineMg`, `imageName`, `absorptionRate`, " +
+                        "`startedAtMillis`, `durationMinutes`, `healthConnectRecordId`) " +
+                        "SELECT `id`, `drinkName`, `caffeineMg`, `emoji`, `presetItemId`, `quantity`, " +
+                        "`unitKey`, `unitCaffeineMg`, `imageName`, `absorptionRate`, " +
+                        "`startedAtMillis`, `durationMinutes`, `healthConnectRecordId` FROM `consumption_log`"
+                )
+                db.execSQL("DROP TABLE `consumption_log`")
+                db.execSQL("ALTER TABLE `consumption_log_new` RENAME TO `consumption_log`")
+            }
+        }
+
         fun getDatabase(context: Context): CaffeineDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -45,10 +93,14 @@ abstract class CaffeineDatabase : RoomDatabase() {
                     CaffeineDatabase::class.java,
                     "caffeine_database"
                 )
-                    .addMigrations(MIGRATION_9_10)
+                    .addMigrations(MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
                     .addCallback(object : RoomDatabase.Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)
+                            // Fresh DB is seeded from the current catalog below, so mark it
+                            // current up front — this prevents the one-time catalog merge
+                            // from racing the seed on first launch.
+                            DrinkCatalogSync.markCurrent(context)
                             // Seed in background when DB is first created
                             CoroutineScope(Dispatchers.IO).launch {
                                 INSTANCE?.let { database ->

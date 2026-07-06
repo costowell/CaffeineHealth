@@ -17,9 +17,12 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContentCopy
@@ -31,8 +34,11 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonShapes
 import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ElevatedCard
@@ -43,6 +49,7 @@ import com.uc.caffeine.ui.components.segmentedListItemShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SegmentedListItem
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -56,13 +63,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -77,6 +84,8 @@ import com.uc.caffeine.data.model.ConsumptionEntry
 import com.uc.caffeine.data.model.DrinkUnit
 import com.uc.caffeine.ui.components.CaffeineChart
 import com.uc.caffeine.ui.components.CaffeineCircularView
+import com.uc.caffeine.ui.components.CaffeineCoachChip
+import com.uc.caffeine.ui.components.CaffeineCoachSheet
 import com.uc.caffeine.ui.components.CaffeineScreenScaffold
 import com.uc.caffeine.ui.components.ConsumptionContributionChart
 import com.uc.caffeine.ui.components.ConsumptionTimingSection
@@ -93,12 +102,13 @@ import com.uc.caffeine.ui.viewmodel.CaffeineTrend
 import com.uc.caffeine.ui.viewmodel.CaffeineViewModel
 import com.uc.caffeine.ui.viewmodel.HomeScreenUiEvent
 import com.uc.caffeine.util.ConsumptionContributionDetail
+import com.uc.caffeine.util.calculateNextBedtimeMillis
 import com.uc.caffeine.util.calculateServingTotalCaffeine
 import com.uc.caffeine.util.findMatchingUnit
+import com.uc.caffeine.util.MIN_SERVING_QUANTITY
 import com.uc.caffeine.util.formatConsumptionDateHeader
 import com.uc.caffeine.util.formatDurationMinutes
 import com.uc.caffeine.util.formatServingSummary
-import com.uc.caffeine.util.formatTimeOfDay
 import com.uc.caffeine.util.formatTimestampToTime
 import com.uc.caffeine.util.resolvedZoneId
 import java.time.LocalDate
@@ -114,12 +124,12 @@ import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.ToggleButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
 private const val DetailContentFadeInDurationMillis = 180
 private const val DetailContentFadeInDelayMillis = 40
 private const val DetailContentFadeOutDurationMillis = 80
-
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -142,8 +152,10 @@ fun HomeScreen(
     val groupedConsumptionEntries by viewModel.groupedConsumptionEntries.collectAsStateWithLifecycle()
     val showWhatsNew by viewModel.showWhatsNew.collectAsStateWithLifecycle()
     val caffeineTrend by viewModel.caffeineTrend.collectAsStateWithLifecycle()
+    val coachRecommendation by viewModel.coachRecommendation.collectAsStateWithLifecycle()
 
     var selectedEntry by remember { mutableStateOf<ConsumptionEntry?>(null) }
+    var showCoachSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val haptics = rememberAppHaptics()
 
@@ -170,37 +182,38 @@ fun HomeScreen(
         title = stringResource(R.string.home_title),
         actions = {
             val modes = HomeViewMode.entries
-            modes.forEachIndexed { index, mode ->
-                ToggleButton(
-                    checked = userSettings.homeViewMode == mode,
-                    onCheckedChange = { if (it) { haptics.toggle(); viewModel.updateHomeViewMode(mode) } },
-                    shapes = when (index) {
-                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                        modes.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                    },
-                ) {
-                    Icon(
-                        imageVector = when (mode) {
-                            HomeViewMode.GRAPH -> Icons.AutoMirrored.Filled.ShowChart
-                            HomeViewMode.CIRCULAR -> Icons.Filled.DonutLarge
+            Row(horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)) {
+                modes.forEachIndexed { index, mode ->
+                    ToggleButton(
+                        checked = userSettings.homeViewMode == mode,
+                        onCheckedChange = { if (it) { haptics.toggle(); viewModel.updateHomeViewMode(mode) } },
+                        shapes = when (index) {
+                            0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                            modes.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                            else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                         },
-                        contentDescription = when (mode) {
-                            HomeViewMode.GRAPH -> stringResource(R.string.home_view_toggle_to_graph_cd)
-                            HomeViewMode.CIRCULAR -> stringResource(R.string.home_view_toggle_to_circular_cd)
-                        },
-                        modifier = Modifier.size(18.dp),
-                    )
+                    ) {
+                        Icon(
+                            imageVector = when (mode) {
+                                HomeViewMode.GRAPH -> Icons.AutoMirrored.Filled.ShowChart
+                                HomeViewMode.CIRCULAR -> Icons.Filled.DonutLarge
+                            },
+                            contentDescription = when (mode) {
+                                HomeViewMode.GRAPH -> stringResource(R.string.home_view_toggle_to_graph_cd)
+                                HomeViewMode.CIRCULAR -> stringResource(R.string.home_view_toggle_to_circular_cd)
+                            },
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
                 }
             }
         }
     ) { bottomPadding ->
-        ElevatedCard(
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(300.dp),
-            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp),
-            colors = CardDefaults.elevatedCardColors(
+            colors = CardDefaults.cardColors(
                 containerColor = CaffeineSurfaceDefaults.chartContainerColor,
             ),
         ) {
@@ -249,6 +262,18 @@ fun HomeScreen(
                     }
                 }
             }
+        }
+
+        coachRecommendation?.let { recommendation ->
+            Spacer(modifier = Modifier.height(12.dp))
+            CaffeineCoachChip(
+                recommendation = recommendation,
+                userSettings = userSettings,
+                onClick = {
+                    haptics.navigation()
+                    showCoachSheet = true
+                },
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -339,7 +364,7 @@ fun HomeScreen(
                                     haptics.navigation()
                                     selectedEntry = entry
                                 },
-                                modifier = Modifier.heightIn(min = 65.dp),
+                                modifier = Modifier.heightIn(min = 72.dp),
                             )
                         }
 
@@ -357,11 +382,36 @@ fun HomeScreen(
         }
     }
 
+    if (showCoachSheet) {
+        coachRecommendation?.let { recommendation ->
+            CaffeineCoachSheet(
+                recommendation = recommendation,
+                userSettings = userSettings,
+                onLogDose = { doseMg, entryName ->
+                    haptics.confirm()
+                    viewModel.logCoachDose(doseMg, entryName)
+                    showCoachSheet = false
+                },
+                onDismiss = { showCoachSheet = false },
+            )
+        }
+    }
+
     selectedEntry?.let { entry ->
         val detailSnapshotTimeMillis = remember(entry.id) {
             chartData.currentTimeMillis
         }
-        val canRevealDetailContent = true
+        // Composing the Vico chart while the sheet's entrance spring is running drops
+        // frames, so the skeleton stays up until the sheet settles. Latched (never reset
+        // for the same entry) so the chart doesn't flicker back to skeleton on dismiss.
+        var canRevealDetailContent by remember(entry.id) { mutableStateOf(false) }
+        LaunchedEffect(entry.id, sheetState) {
+            snapshotFlow {
+                sheetState.currentValue == sheetState.targetValue &&
+                    sheetState.currentValue != SheetValue.Hidden
+            }.first { it }
+            canRevealDetailContent = true
+        }
 
         val detail by produceState<ConsumptionContributionDetail?>(
             initialValue = null,
@@ -479,9 +529,8 @@ private fun ConsumptionHistoryListItem(
         trailingContent = {
             Text(
                 text = stringResource(R.string.caffeine_mg_compact, entry.caffeineMg),
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleMediumEmphasized,
                 color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold,
             )
         },
         shapes = segmentedListItemShapes(index, count),
@@ -496,16 +545,20 @@ private fun SleepForecastCard(
     caffeineAtBedtimeMg: Double,
     userSettings: UserSettings,
 ) {
+    val colorScheme = MaterialTheme.colorScheme
+    val (containerColor, contentColor) = when {
+        caffeineAtBedtimeMg < userSettings.sleepThresholdMg ->
+            colorScheme.primaryContainer to colorScheme.onPrimaryContainer
+        caffeineAtBedtimeMg < userSettings.sleepThresholdMg * 1.5 ->
+            colorScheme.tertiaryContainer to colorScheme.onTertiaryContainer
+        else -> colorScheme.errorContainer to colorScheme.onErrorContainer
+    }
+
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.elevatedCardColors(
-            containerColor = when {
-                caffeineAtBedtimeMg < userSettings.sleepThresholdMg ->
-                    MaterialTheme.colorScheme.primaryContainer
-                caffeineAtBedtimeMg < userSettings.sleepThresholdMg * 1.5 ->
-                    MaterialTheme.colorScheme.tertiaryContainer
-                else -> MaterialTheme.colorScheme.errorContainer
-            }
+            containerColor = containerColor,
+            contentColor = contentColor,
         )
     ) {
         Row(
@@ -521,14 +574,14 @@ private fun SleepForecastCard(
                     else -> Icons.Default.Cancel
                 },
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                tint = contentColor
             )
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = stringResource(R.string.sleep_forecast_title),
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    color = contentColor
                 )
                 Text(
                     text = when {
@@ -540,7 +593,7 @@ private fun SleepForecastCard(
                             stringResource(R.string.sleep_forecast_disruption, caffeineAtBedtimeMg.toInt())
                     },
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    color = contentColor
                 )
             }
         }
@@ -569,7 +622,7 @@ private fun ConsumptionLogDetailSheet(
         Surface(
             modifier = Modifier.fillMaxWidth(),
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
-            shape = RoundedCornerShape(28.dp),
+            shape = MaterialTheme.shapes.extraLarge,
         ) {
             Row(
                 modifier = Modifier
@@ -622,9 +675,8 @@ private fun ConsumptionLogDetailSheet(
                         } else {
                             Text(
                                 text = stringResource(R.string.home_adds_now, formatPreciseMg(targetDetail.currentContributionMg)),
-                                style = MaterialTheme.typography.titleMedium,
+                                style = MaterialTheme.typography.titleMediumEmphasized,
                                 color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.SemiBold
                             )
                         }
                     }
@@ -786,7 +838,7 @@ private fun SkeletonDetailSheetBody() {
                         .padding(start = 16.dp, end = 4.dp, bottom = 10.dp)
                         .fillMaxWidth()
                         .height(2.dp),
-                    shape = RoundedCornerShape(999.dp)
+                    shape = CircleShape
                 )
                 SkeletonBlock(
                     modifier = Modifier
@@ -794,7 +846,7 @@ private fun SkeletonDetailSheetBody() {
                         .padding(start = 10.dp, bottom = 16.dp)
                         .width(2.dp)
                         .height(132.dp),
-                    shape = RoundedCornerShape(999.dp)
+                    shape = CircleShape
                 )
             }
         }
@@ -863,8 +915,7 @@ private fun ContributionStatRow(
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.SemiBold
+            style = MaterialTheme.typography.bodyLargeEmphasized,
         )
     }
 }
@@ -883,28 +934,21 @@ private fun SheetActionButton(
 ) {
     val contentTint = tint ?: MaterialTheme.colorScheme.onSurface
     val resolvedContainerColor = containerColor ?: MaterialTheme.colorScheme.surfaceVariant
-    val buttonShape = when (index) {
-        0 -> RoundedCornerShape(
-            topStart = 36.dp,
-            bottomStart = 36.dp,
-            topEnd = 4.dp,
-            bottomEnd = 4.dp,
-        )
-        count - 1 -> RoundedCornerShape(
-            topStart = 4.dp,
-            bottomStart = 4.dp,
-            topEnd = 36.dp,
-            bottomEnd = 36.dp,
-        )
-        else -> RoundedCornerShape(4.dp)
+    val connectedShapes = when (index) {
+        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+        count - 1 -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
     }
 
-    androidx.compose.material3.FilledTonalButton(
+    FilledTonalButton(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.height(72.dp),
-        shape = buttonShape,
-        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 10.dp),
+        modifier = modifier.heightIn(min = ButtonDefaults.MediumContainerHeight),
+        shapes = ButtonShapes(
+            shape = connectedShapes.shape,
+            pressedShape = connectedShapes.pressedShape,
+        ),
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp),
         colors = ButtonDefaults.filledTonalButtonColors(
             containerColor = resolvedContainerColor,
             contentColor = contentTint,
@@ -912,24 +956,20 @@ private fun SheetActionButton(
             disabledContentColor = contentTint.copy(alpha = 0.38f)
         )
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(24.dp),
-                tint = contentTint,
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelMedium,
-                maxLines = 1,
-                softWrap = false,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(ButtonDefaults.IconSize),
+            tint = contentTint,
+        )
+        Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
@@ -940,13 +980,13 @@ private fun EditConsumptionEntrySheet(
     viewModel: CaffeineViewModel,
     userSettings: UserSettings,
     onBack: () -> Unit,
-    onSave: (Int, DrinkUnit, Long, Int) -> Unit
+    onSave: (Double, DrinkUnit, Long, Int) -> Unit
 ) {
     val availableUnits by produceState<List<DrinkUnit>?>(initialValue = null, key1 = entry.id, key2 = entry.presetItemId) {
         value = viewModel.getUnitsForPresetItemId(entry.presetItemId)
     }
     var quantity by remember(entry.id) {
-        mutableStateOf(entry.quantity.coerceAtLeast(1))
+        mutableStateOf(entry.quantity.coerceAtLeast(MIN_SERVING_QUANTITY))
     }
     var startedAtMillis by remember(entry.id) {
         mutableStateOf(entry.startedAtMillis)
@@ -1054,14 +1094,12 @@ private fun EditConsumptionEntrySheet(
                 )
                 ServingQuantityStepper(
                     quantity = quantity,
-                    onDecrement = { quantity = (quantity - 1).coerceAtLeast(1) },
-                    onIncrement = { quantity += 1 },
-                    onQuantitySet = { quantity = it },
+                    unitKey = selectedUnit?.unitKey ?: entry.unitKey,
+                    onQuantityChange = { quantity = it },
                 )
                 RollingNumberText(
                     text = stringResource(R.string.caffeine_mg, totalCaffeineMg),
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.headlineSmallEmphasized.copy(
                         color = MaterialTheme.colorScheme.primary,
                     ),
                     labelPrefix = "edit_entry_total",
@@ -1095,7 +1133,8 @@ private fun EditConsumptionEntrySheet(
 }
 
 private fun formatBedtime(settings: UserSettings): String {
-    return formatTimeOfDay(settings.sleepTimeHour, settings.sleepTimeMinute, settings)
+    val nextBedtimeMillis = calculateNextBedtimeMillis(System.currentTimeMillis(), settings)
+    return formatTimestampToTime(nextBedtimeMillis, settings)
 }
 
 private fun formatTimelineHeaderText(

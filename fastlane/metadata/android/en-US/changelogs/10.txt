@@ -1,0 +1,6 @@
+• Caffeine Coach: the smallest, best-timed dose suggestion under your home chart, with full reasoning and one-tap logging
+• Type exact fractional serving amounts (e.g. half a soda)
+• New Pulse Cup app icon, Material You themed-icon support, and an animated splash screen
+• Weekly sleep rota: set a different bedtime per weekday
+• Reliable two-way Health Connect sync
+• New catalog items, incl. Moka Pot Coffee and gram units for chocolate

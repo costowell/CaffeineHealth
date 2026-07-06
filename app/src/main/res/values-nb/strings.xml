@@ -160,4 +160,21 @@
 
     <!-- Common -->
     <string name="brand_caffeine_health">Caffeine Health</string>
+
+    <!-- Caffeine Coach (HomeScreen card) -->
+    <string name="coach_title">Koffein-coach</string>
+    <string name="coach_headline_now">Ta omtrent %1$dmg nå</string>
+    <string name="coach_headline_at">Ta omtrent %1$dmg rundt %2$s</string>
+    <string name="coach_reason_sleep_debt">Du sov %1$s — den minste nyttige dosen for å hente deg inn uten å skade nattesøvnen.</string>
+    <string name="coach_reason_afternoon_dip">Tilpasset ettermiddagsduppen din — minst mulig koffein for å holde deg skjerpet.</string>
+    <string name="coach_reason_stay_sharp">Den minste dosen for å holde deg over fokusnivået ditt gjennom dagen.</string>
+    <string name="coach_residual_note">Synker til ~%1$dmg innen leggetid kl. %2$s.</string>
+    <string name="coach_hold_already_alert">Alt i orden — ingen koffein nødvendig akkurat nå for å holde deg skjerpet.</string>
+    <string name="coach_hold_already_alert_debt">Du går på %1$s søvn, men du er våken nok akkurat nå — vent litt.</string>
+    <string name="coach_hold_bedtime">Hopp over koffein nå — det er for nær leggetiden kl. %1$s til å legge til mer uten å risikere søvnen.</string>
+    <string name="coach_connect_sleep">Koble til søvndata for en anbefaling tilpasset hvordan du faktisk sov.</string>
+    <string name="coach_sleep_hours">%1$dh %2$dm</string>
+    <!-- Caffeine Coach settings -->
+    <string name="coach_setting_label">Koffein-coach</string>
+    <string name="coach_setting_description">Foreslår den minste, best timede dosen for å holde deg skjerpet uten å skade søvnen</string>
 </resources>

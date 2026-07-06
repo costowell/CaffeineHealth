@@ -30,7 +30,7 @@ val MontserratFamily = FontFamily(
 )
 
 // Full M3 type scale — all Montserrat
-val Typography = Typography(
+private val BaseTypography = Typography(
     displayLarge   = TextStyle(fontFamily = MontserratFamily, fontWeight = FontWeight.Bold,     fontSize = 57.sp, lineHeight = 64.sp),
     displayMedium  = TextStyle(fontFamily = MontserratFamily, fontWeight = FontWeight.Bold,     fontSize = 45.sp, lineHeight = 52.sp),
     displaySmall   = TextStyle(fontFamily = MontserratFamily, fontWeight = FontWeight.Bold,     fontSize = 36.sp, lineHeight = 44.sp),
@@ -46,4 +46,24 @@ val Typography = Typography(
     labelLarge     = TextStyle(fontFamily = MontserratFamily, fontWeight = FontWeight.Medium,   fontSize = 14.sp, lineHeight = 20.sp),
     labelMedium    = TextStyle(fontFamily = MontserratFamily, fontWeight = FontWeight.Medium,   fontSize = 12.sp, lineHeight = 16.sp),
     labelSmall     = TextStyle(fontFamily = MontserratFamily, fontWeight = FontWeight.Medium,   fontSize = 11.sp, lineHeight = 16.sp),
+)
+
+// M3 Expressive emphasized roles: same metrics with a heavier Montserrat weight.
+// Without these overrides the library defaults silently fall back to Roboto.
+val Typography = BaseTypography.copy(
+    displayLargeEmphasized   = BaseTypography.displayLarge,
+    displayMediumEmphasized  = BaseTypography.displayMedium,
+    displaySmallEmphasized   = BaseTypography.displaySmall,
+    headlineLargeEmphasized  = BaseTypography.headlineLarge.copy(fontWeight = FontWeight.Bold),
+    headlineMediumEmphasized = BaseTypography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+    headlineSmallEmphasized  = BaseTypography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+    titleLargeEmphasized     = BaseTypography.titleLarge.copy(fontWeight = FontWeight.Bold),
+    titleMediumEmphasized    = BaseTypography.titleMedium.copy(fontWeight = FontWeight.Bold),
+    titleSmallEmphasized     = BaseTypography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+    bodyLargeEmphasized      = BaseTypography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+    bodyMediumEmphasized     = BaseTypography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+    bodySmallEmphasized      = BaseTypography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+    labelLargeEmphasized     = BaseTypography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+    labelMediumEmphasized    = BaseTypography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+    labelSmallEmphasized     = BaseTypography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
 )

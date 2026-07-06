@@ -160,4 +160,21 @@
 
     <!-- Common -->
     <string name="brand_caffeine_health">Caffeine Health</string>
+
+    <!-- Caffeine Coach (HomeScreen card) -->
+    <string name="coach_title">கஃபீன் கோச்</string>
+    <string name="coach_headline_now">இப்போது சுமார் %1$dmg எடுத்துக்கொள்ளுங்கள்</string>
+    <string name="coach_headline_at">%2$s அளவில் சுமார் %1$dmg எடுத்துக்கொள்ளுங்கள்</string>
+    <string name="coach_reason_sleep_debt">நீங்கள் %1$s தூங்கினீர்கள் — இன்றிரவு தூக்கத்தைப் பாதிக்காமல் மீள உதவும் மிகச் சிறிய பயனுள்ள அளவு.</string>
+    <string name="coach_reason_afternoon_dip">உங்கள் எதிர்பார்க்கப்படும் பிற்பகல் சோர்வுக்கு ஏற்ப — விழிப்புடன் இருக்க தேவையான குறைந்தபட்ச கஃபீன்.</string>
+    <string name="coach_reason_stay_sharp">நாள் முழுவதும் உங்கள் கவன நிலைக்கு மேல் இருக்க மிகச் சிறிய அளவு.</string>
+    <string name="coach_residual_note">உங்கள் படுக்கை நேரம் %2$s-க்குள் ~%1$dmg ஆகக் குறையும்.</string>
+    <string name="coach_hold_already_alert">நீங்கள் தயாராக இருக்கிறீர்கள் — விழிப்புடன் இருக்க இப்போது கஃபீன் தேவையில்லை.</string>
+    <string name="coach_hold_already_alert_debt">%1$s தூக்கத்தில் இயங்குகிறீர்கள், ஆனால் இப்போது போதுமான விழிப்புடன் இருக்கிறீர்கள் — சற்று பொறுங்கள்.</string>
+    <string name="coach_hold_bedtime">இப்போது கஃபீன் வேண்டாம் — உங்கள் படுக்கை நேரம் %1$s மிக அருகில் உள்ளது, தூக்கத்தை பாதிக்காமல் சேர்க்க முடியாது.</string>
+    <string name="coach_connect_sleep">நீங்கள் உண்மையில் எப்படி தூங்கினீர்கள் என்பதற்கு ஏற்ற பரிந்துரைக்கு தூக்கத் தரவை இணைக்கவும்.</string>
+    <string name="coach_sleep_hours">%1$dh %2$dm</string>
+    <!-- Caffeine Coach settings -->
+    <string name="coach_setting_label">கஃபீன் கோச்</string>
+    <string name="coach_setting_description">தூக்கத்தைப் பாதிக்காமல் விழிப்புடன் இருக்க மிகச் சிறிய, சரியான நேரத்தில் அளவைப் பரிந்துரைக்கிறது</string>
 </resources>
