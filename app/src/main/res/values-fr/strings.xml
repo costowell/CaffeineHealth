@@ -428,4 +428,5 @@
     <string name="analytics_safe_nights_value"></string>
     <string name="add_empty_message_search"></string>
     <string name="home_serving_unavailable"></string>
+    <string name="onboarding_intro_line_1"></string>
 </resources>
