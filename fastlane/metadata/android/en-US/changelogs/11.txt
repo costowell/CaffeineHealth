@@ -1,0 +1,7 @@
+• Fix a crash on launch affecting some devices and custom ROMs (splash screen exit)
+
+Includes everything from 2.3.0:
+• Caffeine Coach: the smallest, best-timed dose suggestion under your home chart
+• Type exact fractional serving amounts (e.g. half a soda)
+• New Pulse Cup app icon, Material You themed-icon support, and an animated splash
+• Weekly sleep rota; reliable two-way Health Connect sync; new catalog items

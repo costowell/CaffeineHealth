@@ -127,26 +127,15 @@ class MainActivity : ComponentActivity() {
     ) { /* result handled by the system — no-op */ }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Must run before super.onCreate so the Android 12+ splash is themed correctly;
-        // it tears down on the first Compose frame and hands off to the app shell.
-        val splashScreen = installSplashScreen()
+        // Must run before super.onCreate so the Android 12+ splash is themed correctly
+        // and hands off to postSplashScreenTheme on the first frame. We intentionally do
+        // NOT set a custom exit-animation listener: on some OEM/custom ROMs (e.g. the
+        // OnePlus 5T on an Android 15 GSI) the platform hands core-splashscreen a null
+        // splash view, and the library NPEs inside its exit dispatch before our lambda
+        // even runs (crash reported in #35). The system's default exit is used instead —
+        // the branded background and animated icon still show.
+        installSplashScreen()
         super.onCreate(savedInstanceState)
-
-        // Expressive exit: the brand mark fades + eases down a touch while the splash
-        // surface dissolves into the app, rather than a hard cut.
-        splashScreen.setOnExitAnimationListener { splashProvider ->
-            splashProvider.iconView.animate()
-                .alpha(0f)
-                .scaleX(0.86f)
-                .scaleY(0.86f)
-                .setDuration(180L)
-                .start()
-            splashProvider.view.animate()
-                .alpha(0f)
-                .setDuration(240L)
-                .withEndAction { splashProvider.remove() }
-                .start()
-        }
 
         enableEdgeToEdge()
         com.uc.caffeine.util.notifications.NotificationChannels.createChannels(this)
