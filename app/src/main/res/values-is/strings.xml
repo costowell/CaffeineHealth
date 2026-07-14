@@ -161,4 +161,5 @@
     <!-- Caffeine Coach settings -->
     <string name="coach_setting_label">Koffínþjálfari</string>
     <string name="coach_setting_description">Stingur upp á minnsta, best tímasetta skammtinum til að halda þér skörpum án þess að skaða svefn</string>
+    <string name="date_time_24h_label">Nota 24 tíma snið</string>
 </resources>
