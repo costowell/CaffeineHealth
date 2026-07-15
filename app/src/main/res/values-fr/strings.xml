@@ -129,4 +129,25 @@
     <!-- Caffeine Coach settings -->
     <string name="coach_setting_label">Coach caféine</string>
     <string name="coach_setting_description">Suggère la plus petite dose, au meilleur moment, pour rester vif sans nuire au sommeil</string>
+    <string name="date_time_match_system_tz_label">Utiliser le fuseau horaire du système</string>
+    <string name="date_time_match_system_tz_summary">Suivre automatiquement le fuseau horaire de l\'appareil lors de vos voyages</string>
+    <string name="profile_weekly_sleep_rota_summary">Définir une heure de coucher différente pour chaque jour de la semaine.</string>
+    <string name="weekly_sleep_rota_enable_title">Utiliser la rotation hebdomadaire</string>
+    <string name="profile_weekly_sleep_rota_title">Rotation de sommeil hebdomadaire</string>
+    <string name="weekly_sleep_rota_days_section">Heure de coucher par jour</string>
+    <string name="weekly_sleep_rota_disabled_hint">Activez la rotation hebdomadaire pour donner a chaque jour de la semaine sa propre heure de coucher</string>
+    <string name="health_connect_not_installed">Health Connect n\'est pas installé sur cet appareil</string>
+    <string name="health_connect_sync_label">Synchronisation avec Health Connect</string>
+    <string name="health_connect_grant_access">Donner l\'accès aux donnés de sommeil et de caféine</string>
+    <string name="health_connect_imported_drink_name">Caféine</string>
+    <string name="health_connect_seven_day_avg">Moyenne sur 7 jours</string>
+    <string name="notifications_inactivity_section">Rappels d\'inactivité</string>
+    <string name="notifications_daily_section">Rappels quotidiens</string>
+    <string name="notifications_remove_reminder_cd">Supprimer le rappel</string>
+    <string name="notifications_add_reminder">Ajouter un rappel</string>
+    <string name="notifications_add_daily_dialog_title">Ajouter un rappel quotidien</string>
+    <string name="my_data_export_title">Exporter les données</string>
+    <string name="my_data_export_error_unknown">Erreur inconnue</string>
+    <string name="action_save">Enregistrer</string>
+    <string name="unit_mg">mg</string>
 </resources>
