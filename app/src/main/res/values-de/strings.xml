@@ -93,7 +93,7 @@
     <string name="nav_home">Startseite</string>
     <string name="nav_analytics">Analyse</string>
     <string name="nav_settings">Einstellungen</string>
-    <string name="main_add_consumption">Eintrag hinzufügen</string>
+    <string name="main_add_consumption">Konsum hinzufügen</string>
     <!-- Notifications -->
     <string name="notification_channel_daily">Tägliche Erinnerungen</string>
     <string name="notification_channel_daily_description">Tägliche Erinnerungen zum Protokollieren von Koffein</string>
@@ -161,4 +161,11 @@
     <!-- Caffeine Coach settings -->
     <string name="coach_setting_label">Koffein-Coach</string>
     <string name="coach_setting_description">Schlägt die kleinste, optimal getimte Dosis vor, um wach zu bleiben, ohne den Schlaf zu stören</string>
+    <string name="date_time_24h_summary">13:00 anstelle von 1:00 PM</string>
+    <string name="date_time_24h_label">24 Std. Format benutzen</string>
+    <string name="date_time_date_format_sheet_description">Wählen Sie aus, wie Datumsanzeigen angezeigt werden sollen.</string>
+    <string name="date_time_match_system_tz_label">Zeitzone vom System übernehmen</string>
+    <string name="date_time_match_system_tz_summary">Automatisch der Zeitzone der Zeitzone des Systems folgen</string>
+    <string name="date_time_timezone_label">Zeitzone</string>
+    <string name="date_time_timezone_sheet_description">Wählen Sie die Zeitzone, die die App für Diagramme, Zeitberechnungen und Ihre Tagesgrenzen verwenden sollte.</string>
 </resources>
